@@ -1,4 +1,4 @@
-package uXXXXXXX; // replace XXXXXXX with your University ID number
+package u116467;
 import robocode.*;
 
 // API help : http://robocode.sourceforge.net/docs/robocode/robocode/Robot.html
@@ -35,7 +35,7 @@ public class MyRobot extends Robot
 		// Replace the next line with any behavior you would like
 		back(10);
 	}
-	
+
 	/**
 	 * onHitWall: What to do when you hit a wall
 	 */
@@ -43,7 +43,7 @@ public class MyRobot extends Robot
 		// Replace the next line with any behavior you would like
 		back(20);
 	}
-	
+
 	// Many more events are possible! Consult the API
 }
 
