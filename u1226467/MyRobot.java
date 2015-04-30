@@ -1,49 +1,73 @@
-package u116467;
-import robocode.*;
+package u1226467;
 
-// API help : http://robocode.sourceforge.net/docs/robocode/robocode/Robot.html
+import robocode.*;
+import java.util.*;
+import java.awt.geom.*;
 
 public class MyRobot extends Robot
 {
-	/**
-	 * run: My Robot's default behavior
-	 */
+	private static int    BINS        = 47;
+	private static double INFINITY    = Double.POSITIVE_INFINITY;
+	private static double PI          = Math.PI;
+	private static double PADDING     = 0.1;
+	private static double MIN_PADDING = 100;
+	private static double DIRECTION   = 0.1;
+	private static int    RADAR_DIR   = 1;
+
+	// History of statuses
+	private List<RobotStatus> statuses;
+
 	public void run() {
-		// Initialization of the robot should be put here
-        // Robot main loop
+		statuses = new ArrayList<RobotStatus>();
+		Snapshot test = new Snapshot(this);
+
+		addCustomEvent(new RadarTurnCompleteCondition(this));
+		setAdjustRadarForGunTurn(true);
+
 		while(true) {
-			// Replace the next 4 lines with any behavior you would like
-			ahead(100);
-			turnGunRight(360);
-			back(100);
-			turnGunRight(360);
+			System.out.println("Scanning.");
+			turnRadarRight(INFINITY);
 		}
 	}
 
-	/**
-	 * onScannedRobot: What to do when you see another robot
-	 */
-	public void onScannedRobot(ScannedRobotEvent e) {
-		// Replace the next line with any behavior you would like
-		fire(1);
+	public void onStatus(RobotStatus status) {
+		statuses.add(status);
 	}
 
-	/**
-	 * onHitByBullet: What to do when you're hit by a bullet
-	 */
-	public void onHitByBullet(HitByBulletEvent e) {
-		// Replace the next line with any behavior you would like
-		back(10);
+	public void onScannedRobot(ScannedRobotEvent event) {
+		System.out.println("Scanned " + event.getName() + " at " + getTime() + ".");
 	}
 
-	/**
-	 * onHitWall: What to do when you hit a wall
-	 */
-	public void onHitWall(HitWallEvent e) {
-		// Replace the next line with any behavior you would like
-		back(20);
+	public void onCustomEvent(CustomEvent e) {
+		if (e.getCondition() instanceof RadarTurnCompleteCondition) {
+			sweep();
+		}
 	}
 
-	// Many more events are possible! Consult the API
+	private void sweep() {
+		double maxBearingAbs=0, maxBearing=0;
+		int scannedBots=0;
+		Iterator iterator = theEnemyMap.values().
+		iterator();
+
+		while(iterator.hasNext()) {
+			Enemy tmp = (Enemy)iterator.next();
+
+			if (tmp!=null && tmp.isUpdated()) {
+				double bearing = normalRelativeAngle (getHeading() + tmp.getBearing() - getRadarHeading());
+				if (Math.abs(bearing)>maxBearingAbs) {
+					maxBearingAbs=Math.abs(bearing);
+					maxBearing=bearing;
+				}
+				scannedBots++;
+			}
+		}
+
+		double radarTurn=180*radarDirection;
+		if (scannedBots==getOthers())
+		radarTurn=maxBearing+sign(maxBearing)*22.5;
+
+		setTurnRadarRight(radarTurn);
+		radarDirection=sign(radarTurn);
+	}
 }
-
