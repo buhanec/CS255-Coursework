@@ -1,29 +1,27 @@
 package u1226467;
 
 import robocode.*;
-import java.awt.geom.*;
 
-public class Snapshot {
-    public final String name;
-    public final double heading;
-    public final double energy;
-    public final double speed;
-    public final Point2D.Double location;
+public class Snapshot extends VectorPoint {
+    protected final String name;
+    protected final double energy;
+    protected final long time;
 
     Snapshot(ScannedRobotEvent e, Robot r) {
+        super(Utility.vectorAdd(r.getX(), r.getY(), e.getBearingRadians(),
+                                e.getDistance()),
+              e.getHeadingRadians(),
+              e.getVelocity());
         name = e.getName();
-        heading = e.getHeadingRadians();
         energy = e.getEnergy();
-        speed = e.getVelocity();
-        location = Utility.vectorAdd(r.getX(), r.getY(), e.getBearingRadians(), e.getDistance());
+        time = e.getTime();
     }
 
     Snapshot(String name, RobotStatus s) {
+        super(s.getX(), s.getY(), s.getHeading(), s.getVelocity());
         this.name = name;
-        heading = s.getHeading();
         energy = s.getEnergy();
-        speed = s.getVelocity();
-        location = new Point2D.Double(s.getX(), s.getY());
+        time = s.getTime();
     }
 
     Snapshot(RobotStatus s) {
@@ -31,10 +29,21 @@ public class Snapshot {
     }
 
     Snapshot(Robot r) {
+        super(r.getX(), r.getY(), r.getHeading(), r.getVelocity());
         name = r.getName();
-        heading = r.getHeading();
         energy = r.getEnergy();
-        speed = r.getVelocity();
-        location = new Point2D.Double(r.getX(), r.getY());
+        time = r.getTime();
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public double getEnergy() {
+        return energy;
+    }
+
+    public String getName() {
+        return name;
     }
 }

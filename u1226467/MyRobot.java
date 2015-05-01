@@ -13,61 +13,194 @@ public class MyRobot extends Robot
 	private static double MIN_PADDING = 100;
 	private static double DIRECTION   = 0.1;
 	private static int    RADAR_DIR   = 1;
+	private static int    RADAR_360   = 1;
+	private static int    RADAR_180   = 2;
+	private static int    RADAR_45    = 3;
+	private static int    RADAR_0     = 4;
 
-	// History of statuses
-	private List<RobotStatus> statuses;
+	// state
+	private State state;
+	private long previousTime;
+	private double previousEnergy;
+	private double energyDecay;
+	// movement
+	private boolean sit;
+	// radar
+	private boolean radar360;
+	private int radarLast360;
+	private boolean radar180;
+	private boolean radar45;
+	private double radarAngle;
+	private long radarStart;
+	private int radarWorking;
+	private int radarDirection;
 
 	public void run() {
-		statuses = new ArrayList<RobotStatus>();
-		Snapshot test = new Snapshot(this);
+		// state
+		previousTime = -1;
+		previousEnergy = getEnergy();
+		sit = false;
+		state = new State(getOthers() + 1);
+		System.out.println("[State] Initialised for " + (getOthers() + 1));
+		Snapshot snap = new Snapshot(this);
+		state.addSnapshot(snap);
+		System.out.println("[State] Added "+snap.name+" snapshot.");
+		// movement
+		sit = true;
+		// radar
+		radar360 = false;
+		radarLast360 = 0;
+		radar180 = false;
+		radar45 = false;
+		radarAngle = 0;
+		radarStart = 0;
+		radarWorking = RADAR_0;
+		radarDirection = 1;
 
-		addCustomEvent(new RadarTurnCompleteCondition(this));
 		setAdjustRadarForGunTurn(true);
 
 		while(true) {
-			System.out.println("Scanning.");
-			turnRadarRight(INFINITY);
-		}
-	}
-
-	public void onStatus(RobotStatus status) {
-		statuses.add(status);
-	}
-
-	public void onScannedRobot(ScannedRobotEvent event) {
-		System.out.println("Scanned " + event.getName() + " at " + getTime() + ".");
-	}
-
-	public void onCustomEvent(CustomEvent e) {
-		if (e.getCondition() instanceof RadarTurnCompleteCondition) {
-			sweep();
-		}
-	}
-
-	private void sweep() {
-		double maxBearingAbs=0, maxBearing=0;
-		int scannedBots=0;
-		Iterator iterator = theEnemyMap.values().
-		iterator();
-
-		while(iterator.hasNext()) {
-			Enemy tmp = (Enemy)iterator.next();
-
-			if (tmp!=null && tmp.isUpdated()) {
-				double bearing = normalRelativeAngle (getHeading() + tmp.getBearing() - getRadarHeading());
-				if (Math.abs(bearing)>maxBearingAbs) {
-					maxBearingAbs=Math.abs(bearing);
-					maxBearing=bearing;
+			if (getTime() >= previousTime + 1) {
+				System.out.println("=========================");
+				// Check for skipped time
+				if (getTime() > previousTime + 1) {
+					System.out.println("Skipped time "+previousTime+" to "+getTime());
 				}
-				scannedBots++;
+				previousTime = getTime();
+				// Check for energy decay
+				if (previousEnergy - getEnergy() == 10) {
+					energyDecay = 0.1;
+				} else if (previousEnergy - getEnergy() == 0) {
+					energyDecay = 0;
+				} else {
+					System.out.println("[Energy] delta: " + (previousEnergy - getEnergy()));
+				}
+				// Determine strategy
+				//if (targetting.getTarget() != null) {
+					// targetting
+				//} else {
+					// determine if we want a target
+				//}
+				if (state.getRemaining() == 1) {
+					if (state.getScanned() == 1) {
+						radar360 = false;
+						radar180 = false;
+						radarWorking = RADAR_0;
+						radarAngle = 0;
+						radar45 = true;
+					}
+				} else {
+					if (state.getScanned() >= 1) {
+						if (radarWorking != RADAR_180) {
+							System.out.println("180 SCAN TIME");
+							System.out.println(state.getScanned());
+							System.out.println(state);
+							radar180 = true;
+						}
+					} else {
+						if (radarWorking != RADAR_360) {
+							radar360 = true;
+						}
+					}
+					if (radarLast360 < getTime() - 40) {
+						radar360 = true;
+					}
+				}
+				// State
+				state.update();
+				// Radar
+				radar();
+				// Debug
+				System.out.println(state);
+			} else {
+				doNothing();
 			}
 		}
+	}
 
-		double radarTurn=180*radarDirection;
-		if (scannedBots==getOthers())
-		radarTurn=maxBearing+sign(maxBearing)*22.5;
+	private void radar() {
+		if (radar360) {
+			System.out.println("[Radar] 360 queued");
+			if (radarWorking == RADAR_0) {
+				System.out.println("[Radar] 360");
+				radar360 = false;
+				radarAngle = 360;
+				radarStart = getTime();
+				radarWorking = RADAR_360;
+			}
+		}
+		if (radar180) {
+			System.out.println("[Radar] 180 queued");
+			if (radarWorking == RADAR_0) {
+				System.out.println("[Radar] 180");
+				radar180 = false;
+				if (state.getScanned() > 1) {
+					double[] test = state.radar180();
+					System.out.println(test[0]+"-"+test[1]);
+				} else {
+					System.out.println("No robots found for a 180.");
+				}
+				radarStart = getTime();
+				radarWorking = RADAR_180;
+			}
+		}
+		if (radar45) {
+			System.out.println("[Radar] 45 queued");
+			if (radarWorking == RADAR_0) {
+				System.out.println("[Radar] 45");
+				radar45 = false;
+				radarStart = getTime();
+				radarWorking = RADAR_45;
+			}
+		}
+		if (radarWorking != RADAR_0) {
+			if (radarAngle < Rules.RADAR_TURN_RATE) {
+				if (radarDirection == 1) {
+					turnRadarRight(radarAngle);
+				} else {
+					turnRadarLeft(radarAngle);
+				}
+				radarWorking = RADAR_0;
+			} else {
+				if (radarDirection == 1) {
+					turnRadarRight(Rules.RADAR_TURN_RATE);
+				} else {
+					turnRadarLeft(Rules.RADAR_TURN_RATE);
+				}
+				radarAngle -= Rules.RADAR_TURN_RATE;
+			}
+		} else {
+			System.out.println("Radar inactive!");
+		}
+	}
 
-		setTurnRadarRight(radarTurn);
-		radarDirection=sign(radarTurn);
+	//TODO
+	/*
+	private void move() {
+		if (!sit) {
+			if (targetting.getTarget() != null) {
+				pilot = targettingPilot;
+			} else {
+				pilot = runningPilot;
+			}
+		} else {
+			pilot = sittingPilot;
+		}
+		pilot.move();
+	}
+	//*/
+
+	public void onStatus(StatusEvent e)  {
+		if (state != null) {
+			Snapshot snap = new Snapshot(getName(), e.getStatus());
+			state.addSnapshot(snap);
+			System.out.println("[State] Added "+snap.name+" snapshot.");
+		}
+	}
+
+	public void onScannedRobot(ScannedRobotEvent e) {
+		Snapshot snap = new Snapshot(e, this);
+		state.addSnapshot(snap);
+		System.out.println("[State] Added "+snap.name+" snapshot.");
 	}
 }

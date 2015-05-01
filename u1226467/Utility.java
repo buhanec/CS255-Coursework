@@ -1,15 +1,14 @@
 package u1226467;
 
 import robocode.*;
-import java.awt.geom.*;
 
 public class Utility {;
-    public static Point2D.Double vectorAdd(Point2D.Double origin, double angle, double length) {
-        return new Point2D.Double(origin.x + length * Math.sin(angle), origin.y + length * Math.cos(angle));
+    public static Point vectorAdd(Point origin, double angle, double length) {
+        return new Point(origin.x + length * Math.sin(angle), origin.y + length * Math.cos(angle));
     }
 
-    public static Point2D.Double vectorAdd(double x, double y, double angle, double length) {
-        return new Point2D.Double(x + length * Math.sin(angle), y + length * Math.cos(angle));
+    public static Point vectorAdd(double x, double y, double angle, double length) {
+        return new Point(x + length * Math.sin(angle), y + length * Math.cos(angle));
     }
 
     public static boolean validBullet(double power) {
@@ -20,11 +19,27 @@ public class Utility {;
         return Math.min(min, Math.max(max, value));
     }
 
+    public static boolean containedii(double value, double min, double max) {
+        return ((value >= min) && (value <= max));
+    }
+
+    public static boolean containedin(double value, double min, double max) {
+        return ((value >= min) && (value < max));
+    }
+
+    public static boolean containedni(double value, double min, double max) {
+        return ((value > min) && (value <= max));
+    }
+
+    public static boolean containednn(double value, double min, double max) {
+        return ((value > min) && (value < max));
+    }
+
     public static double lateral(double value, double bearing) {
         return value * Math.sin(bearing);
     }
 
     public static int direction(double value, double bearing) {
-        return ((lateral >= 0)  ? 1 : -1);
+        return ((lateral(value, bearing) >= 0)  ? 1 : -1);
     }
 }
