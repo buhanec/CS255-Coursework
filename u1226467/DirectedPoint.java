@@ -27,7 +27,7 @@ public class DirectedPoint extends Point {
     }
 
     public void setHeading(DirectedPoint observer, double bearing) {
-        this.heading = (observer.getHeading() + bearing)%(Math.PI*2);
+        this.heading = (observer.getHeading() + bearing + 2*Math.PI)%(2*Math.PI);
     }
 
     public double getBearingTo(DirectedPoint point) {
@@ -53,7 +53,7 @@ public class DirectedPoint extends Point {
         } else {
             theta = Math.PI*2.5 - theta;
         }
-        return theta%(Math.PI*2);
+        return (theta+2*Math.PI)%(2*Math.PI);
     }
 
     public double getRelativeBearingTo(DirectedPoint point) {

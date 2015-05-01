@@ -32,6 +32,7 @@ public class MyRobot extends Robot
 	private boolean radar45;
 	private double radarAngle;
 	private long radarStart;
+	private int radarPrevious;
 	private int radarWorking;
 	private int radarDirection;
 
@@ -55,6 +56,7 @@ public class MyRobot extends Robot
 		radarAngle = 0;
 		radarStart = 0;
 		radarWorking = RADAR_0;
+		radarPrevious = RADAR_0;
 		radarDirection = 1;
 
 		setAdjustRadarForGunTurn(true);
@@ -83,6 +85,7 @@ public class MyRobot extends Robot
 				//}
 				if (state.getRemaining() == 1) {
 					if (state.getScanned() == 1) {
+						System.out.println("duel");
 						radar360 = false;
 						radar180 = false;
 						radarWorking = RADAR_0;
@@ -90,28 +93,35 @@ public class MyRobot extends Robot
 						radar45 = true;
 					}
 				} else {
-					if (state.getScanned() >= 1) {
-						if (radarWorking != RADAR_180) {
-							System.out.println("180 SCAN TIME");
-							System.out.println(state.getScanned());
-							System.out.println(state);
+					System.out.println(radarWorking + " " + radarPrevious + " " + state.getScanned());
+					System.out.println(state);
+					if (state.getScanned() >= 2) {
+						if (radarWorking == RADAR_0 || (radarPrevious == RADAR_360 && radarWorking == RADAR_360)) {
+							System.out.println("main 180");
+							radar360 = false;
+							radarWorking = RADAR_0;
+							radarAngle = 0;
 							radar180 = true;
 						}
 					} else {
-						if (radarWorking != RADAR_360) {
+						if (radarWorking == RADAR_0) {
+							System.out.println("main 360");
 							radar360 = true;
 						}
 					}
-					if (radarLast360 < getTime() - 40) {
+					if (radarLast360 < getTime() - 40 && state.getScanned() < state.getRemaining()) {
+						System.out.println("timed 360");
 						radar360 = true;
 					}
 				}
-				// State
-				state.update();
+				if (!radar360 && !radar45 && !radar180 && radarWorking == RADAR_0) {
+					System.out.println("backup");
+					radar360 = true;
+				}
+				System.out.println("-------------------------");
 				// Radar
+				System.out.println("Time when commencing radar movement: " + getTime());
 				radar();
-				// Debug
-				System.out.println(state);
 			} else {
 				doNothing();
 			}
@@ -136,7 +146,7 @@ public class MyRobot extends Robot
 				radar180 = false;
 				if (state.getScanned() > 1) {
 					double[] test = state.radar180();
-					System.out.println(test[0]+"-"+test[1]);
+					System.out.println(Math.toDegrees(test[0])+"-"+Math.toDegrees(test[1]));
 				} else {
 					System.out.println("No robots found for a 180.");
 				}
@@ -153,13 +163,19 @@ public class MyRobot extends Robot
 				radarWorking = RADAR_45;
 			}
 		}
+		// We have now determined how we are moving, advance state
+		System.out.println("Time when commencing state update: " + getTime());
+		state.update();
+		// Start movement
 		if (radarWorking != RADAR_0) {
-			if (radarAngle < Rules.RADAR_TURN_RATE) {
+			// TODO: precision safety net
+			if (radarAngle <= Rules.RADAR_TURN_RATE) {
 				if (radarDirection == 1) {
 					turnRadarRight(radarAngle);
 				} else {
 					turnRadarLeft(radarAngle);
 				}
+				radarPrevious = radarWorking;
 				radarWorking = RADAR_0;
 			} else {
 				if (radarDirection == 1) {

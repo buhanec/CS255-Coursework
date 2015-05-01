@@ -1,0 +1,8 @@
+    private double getWallsDamage() {
+        Point2D.Double pos = this.pos();
+        double dmg = 0;
+        if (vel == 0 && (RoboMath.minFromWalls(pos) < 20)) {
+            dmg = Math.max(Math.abs(lastVel) * 0.5D - 1.0D, 0.0D);
+        }
+        return dmg;
+    }

@@ -46,4 +46,8 @@ public class Snapshot extends VectorPoint {
     public String getName() {
         return name;
     }
+
+    public String toString() {
+        return name + " at " + time;
+    }
 }
