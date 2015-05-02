@@ -70,7 +70,7 @@ public class State {
     public int getScanned(int threshold) {
         int retval = 0;
         int max = Math.min(HISTORY, threshold);
-        for (int i = 0; i < id; i++) {
+        for (int i = 1; i < id; i++) {
             for (int j = 0; j < max; j++) {
                 if (history[j][i] != null) {
                     retval++;
@@ -83,6 +83,23 @@ public class State {
 
     public int getRemaining() {
         return remaining-1;
+    }
+
+    public Set<String> getScannedNames() {
+        return getScannedNames(2);
+    }
+
+    public Set<String> getScannedNames(int threshold) {
+        Set<String> names = new HashSet<String>();
+        int max = Math.min(HISTORY, threshold);
+        for (int i = 1; i < id; i++) {
+            for (int j = 0; j < max; j++) {
+                if (history[j][i] != null) {
+                    names.add(history[j][i].getName());
+                }
+            }
+        }
+        return names;
     }
 
     public void addSnapshot(Snapshot snapshot) {
@@ -109,28 +126,34 @@ public class State {
         return null;
     }
 
-    public double[] radar180() {
-        long time = 1;
-        VectorPoint self = history[0][0];
-        VectorPoint enemy;
+    public double[] getArc() {
+        return getArc(history[0][0]);
+    }
+
+    public double[] getArc(double radarHeading) {
+        DirectedPoint self = new DirectedPoint(history[0][0]);
+        self.setHeading(radarHeading);
+        return getArc(self);
+    }
+
+    public double[] getArc(DirectedPoint radar) {
+        long time = 2;
+        DirectedPoint self = history[0][0];
+        Snapshot enemy;
         VectorPoint point;
         double left;
         double right;
         double[] retval = {Double.NaN, Double.NaN};
 
         // initial population, very crude estimates with only two ticks of projection
-        // assume robot position cannot vary more than Math.PI
         for (int i = 1; i < id; i++) {
             enemy = getSnapshot(i);
             if (enemy != null) {
-                System.out.println("DEBUG: left");
-                left = self.getBearingTo(enemy.projectLateralMax(self, -1, time));
-                System.out.println("DEBUG: right");
-                right = self.getBearingTo(enemy.projectLateralMax(self, 1, time));
-                System.out.println("DEBUG1: "+Math.toDegrees(self.getBearingTo(enemy.project())));
-                System.out.println("DEBUG2: "+Math.toDegrees(left));
-                System.out.println("DEBUG3: "+Math.toDegrees(right));
-                if (retval[0] == Double.NaN) {
+                System.out.println(enemy.name);
+                left = radar.getBearingTo(enemy.projectLateralMax(self, -1, time)) + 0;
+                right = radar.getBearingTo(enemy.projectLateralMax(self, 1, time)) + 0;
+                //System.out.println(enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
+                if (Double.isNaN(retval[0])) {
                     retval[0] = left;
                     retval[1] = right;
                 } else {
@@ -149,19 +172,16 @@ public class State {
                         retval[0] = left;
                     }
                 }
-                System.out.println("DEBUG4: "+Math.toDegrees(retval[0])+" - "+Math.toDegrees(retval[1]));
             }
         }
         return retval;
     }
 
     public String toString() {
-        String retval = "-----------------------\r\n";
+        String retval = "State:";
         for (int i = 0; i < id; i++) {
-            retval += i + " -> " + getSnapshot(i) + "\r\n";
+            retval += "\r\n  " + i + " -> " + getSnapshot(i);
         }
-        retval += "id: " + id + "\r\n";
-        retval += "-----------------------";
         return retval;
     }
 }

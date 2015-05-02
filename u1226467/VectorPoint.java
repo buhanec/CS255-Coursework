@@ -90,10 +90,14 @@ public class VectorPoint extends DirectedPoint {
 
     public VectorPoint projectLateralMax(DirectedPoint point, int direction) {
         VectorPoint retval = new VectorPoint(this);
-        double maxturn = Rules.MAX_TURN_RATE_RADIANS;
         double bearing = point.getBearingTo(this);
-        double right = (point.getHeading() + bearing + Math.PI/2)%(2*Math.PI);
-        double left = (point.getHeading() + bearing + 3*Math.PI/2)%(2*Math.PI);
+        //System.out.println("---");
+        //System.out.println(Math.toDegrees(point.getHeading())+" "+Math.toDegrees(bearing));
+        double left = Utility.fixAngle(point.getHeading() + bearing - Math.PI/2 - getHeading());
+        int ldir = 1;
+        double right = Utility.fixAngle(point.getHeading() + bearing + Math.PI/2 - getHeading());
+        int rdir = 1;
+        //System.out.println(Math.toDegrees(left)+" "+Math.toDegrees(right));
         double max;
         double min;
         // speed
@@ -107,29 +111,26 @@ public class VectorPoint extends DirectedPoint {
             max = Math.min(0, speed + Rules.DECELERATION);
             min = Math.max(-Rules.MAX_VELOCITY, speed - Rules.ACCELERATION);
         }
-        // best bearing
-        if (Utility.isAngleBetween(getHeading(),
-                                   Utility.fixAngle(right-maxturn),
-                                   Utility.fixAngle(right+maxturn))) {
-            right = right;
-        } else if (Utility.isAngleBetween(getHeading(),
-                                          Utility.fixAngle(right-Math.PI),
-                                          right)) {
-            right = Utility.fixAngle(getHeading() + maxturn);
-        } else {
-            right = Utility.fixAngle(getHeading() - maxturn);
+        // get as close to ideal turn values as possible
+        //System.out.println(ldir+" "+Math.toDegrees(left));
+        if (left > Math.PI) {
+            left = left - Math.PI;
+            ldir = -ldir;
         }
-        if (Utility.isAngleBetween(getHeading(),
-                                   Utility.fixAngle(left-maxturn),
-                                   Utility.fixAngle(left+maxturn))) {
-            left = left;
-        } else if (Utility.isAngleBetween(getHeading(),
-                                          Utility.fixAngle(left-Math.PI),
-                                          left)) {
-            left = Utility.fixAngle(getHeading() + maxturn);
-        } else {
-            left = Utility.fixAngle(getHeading() - maxturn);
+        left = Math.min(left, Rules.MAX_TURN_RATE_RADIANS);
+        //System.out.println(ldir+" "+Math.toDegrees(left));
+        //System.out.println(rdir+" "+Math.toDegrees(right));
+        if (right > Math.PI) {
+            right = right - Math.PI;
+            rdir = -rdir;
         }
+        right = Math.min(right, Rules.MAX_TURN_RATE_RADIANS);
+        //System.out.println(rdir+" "+Math.toDegrees(right));
+        // turn turn values in headings
+        left = Utility.fixAngle(getHeading()+(ldir*left));
+        right = Utility.fixAngle(getHeading()+(rdir*right));
+        //System.out.println(Math.toDegrees(left)+" "+Math.toDegrees(right));
+        //System.out.println("---");
         // determine whether going forwards or backwards maximises lateralness
         if (direction == 1) {
             if (Utility.lateral(max, right) > Utility.lateral(min, left)) {
@@ -148,6 +149,7 @@ public class VectorPoint extends DirectedPoint {
                 retval.setSpeed(min);
             }
         }
+        // project the point in case we ever need the coorinates
         retval = retval.projectLinear(1);
         return retval;
     }

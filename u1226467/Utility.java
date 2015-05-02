@@ -52,6 +52,9 @@ public class Utility {;
     }
 
     public static double fixAngle(double angle) {
-        return (angle+2*Math.PI)%(2*Math.PI);
+        while (angle < 0) {
+            angle += 2*Math.PI;
+        }
+        return angle%(2*Math.PI);
     }
 }

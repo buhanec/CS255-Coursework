@@ -18,7 +18,7 @@ public class Snapshot extends VectorPoint {
     }
 
     Snapshot(String name, RobotStatus s) {
-        super(s.getX(), s.getY(), s.getHeading(), s.getVelocity());
+        super(s.getX(), s.getY(), s.getHeadingRadians(), s.getVelocity());
         this.name = name;
         energy = s.getEnergy();
         time = s.getTime();
@@ -29,7 +29,7 @@ public class Snapshot extends VectorPoint {
     }
 
     Snapshot(Robot r) {
-        super(r.getX(), r.getY(), r.getHeading(), r.getVelocity());
+        super(r.getX(), r.getY(), Math.toRadians(r.getHeading()), r.getVelocity());
         name = r.getName();
         energy = r.getEnergy();
         time = r.getTime();

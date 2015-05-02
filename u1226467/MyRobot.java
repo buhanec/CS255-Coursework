@@ -12,29 +12,16 @@ public class MyRobot extends Robot
 	private static double PADDING     = 0.1;
 	private static double MIN_PADDING = 100;
 	private static double DIRECTION   = 0.1;
-	private static int    RADAR_DIR   = 1;
-	private static int    RADAR_360   = 1;
-	private static int    RADAR_180   = 2;
-	private static int    RADAR_45    = 3;
-	private static int    RADAR_0     = 4;
 
 	// state
 	private State state;
 	private long previousTime;
 	private double previousEnergy;
 	private double energyDecay;
+	// radar
+	Radar radar;
 	// movement
 	private boolean sit;
-	// radar
-	private boolean radar360;
-	private int radarLast360;
-	private boolean radar180;
-	private boolean radar45;
-	private double radarAngle;
-	private long radarStart;
-	private int radarPrevious;
-	private int radarWorking;
-	private int radarDirection;
 
 	public void run() {
 		// state
@@ -46,24 +33,17 @@ public class MyRobot extends Robot
 		Snapshot snap = new Snapshot(this);
 		state.addSnapshot(snap);
 		System.out.println("[State] Added "+snap.name+" snapshot.");
+		// radar
+		radar = new Radar(this, state);
 		// movement
 		sit = true;
-		// radar
-		radar360 = false;
-		radarLast360 = 0;
-		radar180 = false;
-		radar45 = false;
-		radarAngle = 0;
-		radarStart = 0;
-		radarWorking = RADAR_0;
-		radarPrevious = RADAR_0;
-		radarDirection = 1;
 
 		setAdjustRadarForGunTurn(true);
 
 		while(true) {
 			if (getTime() >= previousTime + 1) {
 				System.out.println("=========================");
+				System.out.println("Current time: "+getTime());
 				// Check for skipped time
 				if (getTime() > previousTime + 1) {
 					System.out.println("Skipped time "+previousTime+" to "+getTime());
@@ -77,116 +57,17 @@ public class MyRobot extends Robot
 				} else {
 					System.out.println("[Energy] delta: " + (previousEnergy - getEnergy()));
 				}
-				// Determine strategy
-				//if (targetting.getTarget() != null) {
-					// targetting
-				//} else {
-					// determine if we want a target
-				//}
-				if (state.getRemaining() == 1) {
-					if (state.getScanned() == 1) {
-						System.out.println("duel");
-						radar360 = false;
-						radar180 = false;
-						radarWorking = RADAR_0;
-						radarAngle = 0;
-						radar45 = true;
-					}
-				} else {
-					System.out.println(radarWorking + " " + radarPrevious + " " + state.getScanned());
-					System.out.println(state);
-					if (state.getScanned(8) >= 2) {
-						if (radarWorking == RADAR_0 || (radarPrevious == RADAR_360 && radarWorking == RADAR_360)) {
-							System.out.println("main 180");
-							radar360 = false;
-							radarWorking = RADAR_0;
-							radarAngle = 0;
-							radar180 = true;
-						}
-					} else {
-						if (radarWorking == RADAR_0) {
-							System.out.println("main 360");
-							radar360 = true;
-						}
-					}
-					if (radarLast360 < getTime() - 40 && state.getScanned() < state.getRemaining()) {
-						System.out.println("timed 360");
-						radar360 = true;
-					}
-				}
-				if (!radar360 && !radar45 && !radar180 && radarWorking == RADAR_0) {
-					System.out.println("backup");
-					radar360 = true;
-				}
+				// Targetting TODO
 				System.out.println("-------------------------");
+				System.out.println(state);
 				// Radar
-				System.out.println("Time when commencing radar movement: " + getTime());
-				radar();
+				radar.doStrategy();
+				System.out.println("-------------------------");
+				state.update(getTime()+1);
+				radar.turn();
 			} else {
 				doNothing();
 			}
-		}
-	}
-
-	private void radar() {
-		if (radar360) {
-			System.out.println("[Radar] 360 queued");
-			if (radarWorking == RADAR_0) {
-				System.out.println("[Radar] 360");
-				radar360 = false;
-				radarAngle = 360;
-				radarStart = getTime();
-				radarWorking = RADAR_360;
-			}
-		}
-		if (radar180) {
-			System.out.println("[Radar] 180 queued");
-			if (radarWorking == RADAR_0) {
-				System.out.println("[Radar] 180");
-				radar180 = false;
-				if (state.getScanned(8) >= 2) {
-					double[] test = state.radar180();
-					System.out.println(Math.toDegrees(test[0])+"-"+Math.toDegrees(test[1]));
-				} else {
-					System.out.println("No robots found for a 180.");
-				}
-				radarStart = getTime();
-				radarWorking = RADAR_180;
-			}
-		}
-		if (radar45) {
-			System.out.println("[Radar] 45 queued");
-			if (radarWorking == RADAR_0) {
-				System.out.println("[Radar] 45");
-				radar45 = false;
-				radarStart = getTime();
-				radarWorking = RADAR_45;
-			}
-		}
-		// We have now determined how we are moving, advance state
-		System.out.println("Time when commencing state update: " + getTime());
-		state.update();
-		// Start movement
-		if (radarWorking != RADAR_0) {
-			// TODO: precision safety net
-			if (radarAngle <= Rules.RADAR_TURN_RATE) {
-				if (radarDirection == 1) {
-					turnRadarRight(radarAngle);
-				} else {
-					turnRadarLeft(radarAngle);
-				}
-				radarPrevious = radarWorking;
-				radarWorking = RADAR_0;
-			} else {
-				if (radarDirection == 1) {
-					turnRadarRight(Rules.RADAR_TURN_RATE);
-				} else {
-					turnRadarLeft(Rules.RADAR_TURN_RATE);
-				}
-				radarAngle -= Rules.RADAR_TURN_RATE;
-			}
-		} else {
-			System.out.println("Radar inactive!");
 		}
 	}
 
