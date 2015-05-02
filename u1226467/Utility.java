@@ -42,4 +42,16 @@ public class Utility {;
     public static int direction(double value, double bearing) {
         return ((lateral(value, bearing) >= 0)  ? 1 : -1);
     }
+
+    public static double angleBetween(double left, double right) {
+        return (2*Math.PI + right - left)%(2*Math.PI);
+    }
+
+    public static boolean isAngleBetween(double angle, double left, double right) {
+        return (angleBetween(left, right) > angleBetween(angle, right));
+    }
+
+    public static double fixAngle(double angle) {
+        return (angle+2*Math.PI)%(2*Math.PI);
+    }
 }

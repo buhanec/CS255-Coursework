@@ -110,45 +110,47 @@ public class State {
     }
 
     public double[] radar180() {
-        long time = 2;
-        VectorPoint point;
-        VectorPoint enemy;
+        long time = 1;
         VectorPoint self = history[0][0];
-        double angle;
-        SortedMap<Double, VectorPoint> right = new TreeMap<Double, VectorPoint>();
-        SortedMap<Double, VectorPoint> left = new TreeMap<Double, VectorPoint>();
-        double[] retval = new double[2];
+        VectorPoint enemy;
+        VectorPoint point;
+        double left;
+        double right;
+        double[] retval = {Double.NaN, Double.NaN};
 
         // initial population, very crude estimates with only two ticks of projection
+        // assume robot position cannot vary more than Math.PI
         for (int i = 1; i < id; i++) {
             enemy = getSnapshot(i);
             if (enemy != null) {
-                System.out.println(self);
-                point = enemy.projectLateralMax(self, 1, time);
-                angle = self.getBearingTo(point);
-                if (Utility.containedii(angle, 0, Math.PI)) {
-                    right.put(angle, point);
+                System.out.println("DEBUG: left");
+                left = self.getBearingTo(enemy.projectLateralMax(self, -1, time));
+                System.out.println("DEBUG: right");
+                right = self.getBearingTo(enemy.projectLateralMax(self, 1, time));
+                System.out.println("DEBUG1: "+Math.toDegrees(self.getBearingTo(enemy.project())));
+                System.out.println("DEBUG2: "+Math.toDegrees(left));
+                System.out.println("DEBUG3: "+Math.toDegrees(right));
+                if (retval[0] == Double.NaN) {
+                    retval[0] = left;
+                    retval[1] = right;
                 } else {
-                    left.put(angle, point);
+                    if (Utility.isAngleBetween(left, retval[0], retval[1])) {
+                        if (Utility.isAngleBetween(right, retval[0], retval[1])) {
+                            continue;
+                        } else {
+                            retval[1] = right;
+                        }
+                    } else if (Utility.isAngleBetween(right, retval[0], retval[1])) {
+                        retval[0] = left;
+                    } else if (Utility.angleBetween(retval[1], left) <
+                               Utility.angleBetween(right, retval[0])) {
+                        retval[1] = right;
+                    } else {
+                        retval[0] = left;
+                    }
                 }
-                point = enemy.projectLateralMax(self, -1, time);
-                angle = self.getBearingTo(point);
-                if (Utility.containedii(angle, 0, Math.PI)) {
-                    right.put(angle, point);
-                } else {
-                    left.put(angle, point);
-                }
+                System.out.println("DEBUG4: "+Math.toDegrees(retval[0])+" - "+Math.toDegrees(retval[1]));
             }
-        }
-        if (left.size() > 0) {
-            retval[0] = left.firstKey();
-        } else {
-            retval[0] = right.lastKey();
-        }
-        if (right.size() > 0) {
-            retval[1] = right.lastKey();
-        } else {
-            retval[1] = left.firstKey();
         }
         return retval;
     }

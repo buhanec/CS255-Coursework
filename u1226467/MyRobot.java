@@ -95,7 +95,7 @@ public class MyRobot extends Robot
 				} else {
 					System.out.println(radarWorking + " " + radarPrevious + " " + state.getScanned());
 					System.out.println(state);
-					if (state.getScanned() >= 2) {
+					if (state.getScanned(8) >= 2) {
 						if (radarWorking == RADAR_0 || (radarPrevious == RADAR_360 && radarWorking == RADAR_360)) {
 							System.out.println("main 180");
 							radar360 = false;
@@ -144,7 +144,7 @@ public class MyRobot extends Robot
 			if (radarWorking == RADAR_0) {
 				System.out.println("[Radar] 180");
 				radar180 = false;
-				if (state.getScanned() > 1) {
+				if (state.getScanned(8) >= 2) {
 					double[] test = state.radar180();
 					System.out.println(Math.toDegrees(test[0])+"-"+Math.toDegrees(test[1]));
 				} else {

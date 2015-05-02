@@ -92,46 +92,63 @@ public class VectorPoint extends DirectedPoint {
         VectorPoint retval = new VectorPoint(this);
         double maxturn = Rules.MAX_TURN_RATE_RADIANS;
         double bearing = point.getBearingTo(this);
-        double right = Math.min(Math.abs(Math.PI/2 - bearing), maxturn);
-        double left = Math.min(Math.abs(3*Math.PI/2 - bearing), maxturn);
+        double right = (point.getHeading() + bearing + Math.PI/2)%(2*Math.PI);
+        double left = (point.getHeading() + bearing + 3*Math.PI/2)%(2*Math.PI);
         double max;
         double min;
+        // speed
         if (speed > 0) {
             max = Math.min(Rules.MAX_VELOCITY, speed + Rules.ACCELERATION);
             min = Math.max(0, speed - Rules.DECELERATION);
         } else if (speed == 0) {
             max = Math.min(Rules.MAX_VELOCITY, Rules.ACCELERATION);
-            min = Math.max(-Rules.MAX_VELOCITY, Rules.DECELERATION);
+            min = Math.max(-Rules.MAX_VELOCITY, -Rules.ACCELERATION);
         } else {
             max = Math.min(0, speed + Rules.DECELERATION);
             min = Math.max(-Rules.MAX_VELOCITY, speed - Rules.ACCELERATION);
         }
-        if (bearing > 3*Math.PI/2 || bearing < Math.PI/2) {
-            right = bearing + right;
-            left = bearing - left;
+        // best bearing
+        if (Utility.isAngleBetween(getHeading(),
+                                   Utility.fixAngle(right-maxturn),
+                                   Utility.fixAngle(right+maxturn))) {
+            right = right;
+        } else if (Utility.isAngleBetween(getHeading(),
+                                          Utility.fixAngle(right-Math.PI),
+                                          right)) {
+            right = Utility.fixAngle(getHeading() + maxturn);
         } else {
-            right = bearing - right;
-            left = bearing + left;
+            right = Utility.fixAngle(getHeading() - maxturn);
         }
-        // Clockwise
+        if (Utility.isAngleBetween(getHeading(),
+                                   Utility.fixAngle(left-maxturn),
+                                   Utility.fixAngle(left+maxturn))) {
+            left = left;
+        } else if (Utility.isAngleBetween(getHeading(),
+                                          Utility.fixAngle(left-Math.PI),
+                                          left)) {
+            left = Utility.fixAngle(getHeading() + maxturn);
+        } else {
+            left = Utility.fixAngle(getHeading() - maxturn);
+        }
+        // determine whether going forwards or backwards maximises lateralness
         if (direction == 1) {
             if (Utility.lateral(max, right) > Utility.lateral(min, left)) {
-                retval.setHeading(this, right);
+                retval.setHeading(right);
                 retval.setSpeed(max);
             } else {
-                retval.setHeading(this, left);
+                retval.setHeading(left);
                 retval.setSpeed(min);
             }
-        // Anticlockwise
         } else {
-            if (Utility.lateral(max, left) > Utility.lateral(min, right)) {
-                retval.setHeading(this, left);
+            if (Utility.lateral(max, left) < Utility.lateral(min, right)) {
+                retval.setHeading(left);
                 retval.setSpeed(max);
             } else {
-                retval.setHeading(this, right);
+                retval.setHeading(right);
                 retval.setSpeed(min);
             }
         }
+        retval = retval.projectLinear(1);
         return retval;
     }
 
