@@ -93,9 +93,9 @@ public class VectorPoint extends DirectedPoint {
         double bearing = point.getBearingTo(this);
         //System.out.println("---");
         //System.out.println(Math.toDegrees(point.getHeading())+" "+Math.toDegrees(bearing));
-        double left = Utility.fixAngle(point.getHeading() + bearing - Math.PI/2 - getHeading());
+        double left = Utility.fixAngle(bearing - Math.PI/2 - getHeading());
         int ldir = 1;
-        double right = Utility.fixAngle(point.getHeading() + bearing + Math.PI/2 - getHeading());
+        double right = Utility.fixAngle(bearing + Math.PI/2 - getHeading());
         int rdir = 1;
         //System.out.println(Math.toDegrees(left)+" "+Math.toDegrees(right));
         double max;

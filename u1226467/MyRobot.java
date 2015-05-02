@@ -38,8 +38,6 @@ public class MyRobot extends Robot
 		// movement
 		sit = true;
 
-		setAdjustRadarForGunTurn(true);
-
 		while(true) {
 			if (getTime() >= previousTime + 1) {
 				System.out.println("=========================");
@@ -96,6 +94,7 @@ public class MyRobot extends Robot
 	}
 
 	public void onScannedRobot(ScannedRobotEvent e) {
+		radar.onScannedRobot(e);
 		Snapshot snap = new Snapshot(e, this);
 		state.addSnapshot(snap);
 		System.out.println("[State] Added "+snap.name+" snapshot.");

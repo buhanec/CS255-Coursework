@@ -44,7 +44,7 @@ public class Utility {;
     }
 
     public static double angleBetween(double left, double right) {
-        return (2*Math.PI + right - left)%(2*Math.PI);
+        return Utility.fixAngle(right - left);
     }
 
     public static boolean isAngleBetween(double angle, double left, double right) {

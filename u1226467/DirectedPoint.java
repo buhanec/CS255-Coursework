@@ -30,15 +30,11 @@ public class DirectedPoint extends Point {
         this.heading = (observer.getHeading() + bearing + 2*Math.PI)%(2*Math.PI);
     }
 
-    public double getBearingTo(DirectedPoint point) {
-        return getBearingTo(point.getX(), point.getY());
+    public double getNorthBearingTo(Point point) {
+        return getNorthBearingTo(point.getX(), point.getY());
     }
 
-    public double getBearingTo(Point point) {
-        return getBearingTo(point.getX(), point.getY());
-    }
-
-    public double getBearingTo(double x, double y) {
+    public double getNorthBearingTo(double x, double y) {
         double dx = x - this.x;
         double dy = y - this.y;
         double theta = Math.atan2(dy, dx);
@@ -53,7 +49,15 @@ public class DirectedPoint extends Point {
         } else {
             theta = Math.PI*2.5 - theta;
         }
-        return (theta+2*Math.PI)%(2*Math.PI);
+        return Utility.fixAngle(theta);
+    }
+
+    public double getBearingTo(Point point) {
+        return getBearingTo(point.getX(), point.getY());
+    }
+
+    public double getBearingTo(double x, double y) {
+        return Utility.fixAngle(getNorthBearingTo(x, y)+getHeading());
     }
 
     public double getRelativeBearingTo(DirectedPoint point) {
