@@ -35,4 +35,8 @@ public class Point {
     public String toString() {
         return "("+Math.round(x)+","+Math.round(y)+")";
     }
+
+    public double distanceTo(Point point) {
+        return Math.sqrt(Math.pow((point.getX()-getX()), 2) + Math.pow((point.getY() - getY()), 2));
+    }
 }

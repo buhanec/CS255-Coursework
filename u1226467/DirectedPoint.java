@@ -77,8 +77,4 @@ public class DirectedPoint extends Point {
     public String toString() {
         return "("+Math.round(x)+","+Math.round(y)+") bearing "+Math.round(Math.toDegrees(heading));
     }
-
-    public double lateralOf(VectorPoint vector) {
-        return vector.getSpeed() * Math.sin(getBearingTo(vector));
-    }
 }

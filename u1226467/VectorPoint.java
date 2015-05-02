@@ -88,6 +88,116 @@ public class VectorPoint extends DirectedPoint {
         return new VectorPoint(x, y, heading, speed);
     }
 
+    public VectorPoint projectLateralNew(VectorPoint target, int direction, long time) {
+        VectorPoint retval = this;
+        for (int i = 0; i < time; i++) {
+            retval = retval.projectLateralNew(target, direction);
+        }
+        return retval;
+    }
+
+    public VectorPoint projectLateralNew(VectorPoint target, int direction) {
+        return projectLateralNew(this, target, direction);
+    }
+
+    public VectorPoint projectLateralNew(VectorPoint source, VectorPoint target, int direction) {
+        VectorPoint origin = new VectorPoint(source);
+        origin.project();
+        VectorPoint retval = new VectorPoint(source);
+        // speed of target
+        double max;
+        double min;
+        if (speed > 0) {
+            max = Math.min(Rules.MAX_VELOCITY, speed + Rules.ACCELERATION);
+            min = Math.max(0, speed - Rules.DECELERATION);
+        } else if (speed == 0) {
+            max = Math.min(Rules.MAX_VELOCITY, Rules.ACCELERATION);
+            min = Math.max(-Rules.MAX_VELOCITY, -Rules.ACCELERATION);
+        } else {
+            max = Math.min(0, speed + Rules.DECELERATION);
+            min = Math.max(-Rules.MAX_VELOCITY, speed - Rules.ACCELERATION);
+        }
+        // bearing of target
+        double bearing = target.getNorthBearingTo(origin);
+        double heading = target.getHeading();
+        double temp;
+        double speed;
+        int dir = 1;
+        double distance = target.distanceTo(origin);
+        // heading is "right" of bearing to origin, target rotating "left" around origin
+        if (Utility.isAngleBetween(heading, bearing, Utility.fixAngle(bearing+Math.PI))) {
+            if (direction == -1) {
+                max = max;
+                speed = max;
+                heading = heading;
+            } else {
+                max = -min;
+                speed = min;
+                heading = Utility.fixAngle(heading+Math.PI);
+            }
+            temp = Math.acos(1-Math.pow(max, 2)/(2*Math.pow(distance, 2)));
+            temp = bearing + (Math.PI - temp)/2;
+            if (max >= 0) {
+                // approach optimal angle
+                if (Utility.isAngleBetween(heading, bearing, temp)) {
+                    temp = temp-heading;
+                    dir = 1;
+                } else {
+                    temp = heading-temp;
+                    dir = -1;
+                }
+            } else if (max < 0) {
+                if (Utility.isAngleBetween(heading, bearing, Utility.fixAngle(bearing+Math.PI/2))) {
+                    dir = -1;
+                    temp = Utility.fixAngle(heading-bearing);
+                } else {
+                    dir = 1;
+                    temp = Utility.fixAngle(bearing-bearing);
+                }
+            }
+        // heading is "left" of bearing to origin, target rotating "right" around origin
+        } else {
+            if (direction == 1) {
+                max = max;
+                speed = max;
+                heading = heading;
+            } else {
+                max = -min;
+                speed = min;
+                heading = Utility.fixAngle(heading+Math.PI);
+            }
+            temp = Math.acos(1-Math.pow(max, 2)/(2*Math.pow(distance, 2)));
+            temp = bearing - (Math.PI - temp)/2;
+            if (max >= 0) {
+                // approach optimal angle
+                if (Utility.isAngleBetween(heading, bearing, temp)) {
+                    temp = temp-heading;
+                    dir = -1;
+                } else {
+                    temp = heading-temp;
+                    dir = 1;
+                }
+            } else if (max < 0) {
+                if (Utility.isAngleBetween(heading, bearing, Utility.fixAngle(bearing+Math.PI/2))) {
+                    dir = 1;
+                    temp = Utility.fixAngle(heading-bearing);
+                } else {
+                    dir = -1;
+                    temp = Utility.fixAngle(bearing-bearing);
+                }
+            }
+        }
+        temp = Math.min(Rules.MAX_TURN_RATE_RADIANS, temp);
+        if (dir == 1) {
+            retval.setHeading(Utility.fixAngle(heading + temp));
+        } else {
+            retval.setHeading(Utility.fixAngle(heading - temp));
+        }
+        retval.setSpeed(speed);
+        retval = retval.project();
+        return retval;
+    }
+
     public VectorPoint projectLateralMax(DirectedPoint point, int direction) {
         VectorPoint retval = new VectorPoint(this);
         double bearing = point.getBearingTo(this);

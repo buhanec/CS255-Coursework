@@ -59,7 +59,7 @@ public class MyRobot extends Robot
 				System.out.println("-------------------------");
 				System.out.println(state);
 				// Radar
-				radar.doStrategy();
+				radar.setStrategy();
 				System.out.println("-------------------------");
 				state.update(getTime()+1);
 				radar.turn();
@@ -96,6 +96,10 @@ public class MyRobot extends Robot
 	public void onScannedRobot(ScannedRobotEvent e) {
 		radar.onScannedRobot(e);
 		Snapshot snap = new Snapshot(e, this);
+		VectorPoint self = new VectorPoint(state.getSelf());
+		self.setSpeed(10);
+		VectorPoint other = new VectorPoint(snap);
+		other.setSpeed(5);
 		state.addSnapshot(snap);
 		System.out.println("[State] Added "+snap.name+" snapshot.");
 	}

@@ -126,6 +126,10 @@ public class State {
         return null;
     }
 
+    public Snapshot getSelf() {
+        return history[0][0];
+    }
+
     public double[] getArc() {
         return getArc(history[0][0]);
     }
@@ -137,8 +141,8 @@ public class State {
     }
 
     public double[] getArc(DirectedPoint radar) {
-        long time = 2;
-        DirectedPoint self = history[0][0];
+        long time = 1;
+        VectorPoint self = history[0][0];
         Snapshot enemy;
         VectorPoint point;
         double temp;
@@ -150,16 +154,19 @@ public class State {
         for (int i = 1; i < id; i++) {
             enemy = getSnapshot(i);
             if (enemy != null) {
-                //System.out.println(enemy.name);
-                left = radar.getBearingTo(enemy.projectLateralMax(self, -1, time)) + 0;
-                right = radar.getBearingTo(enemy.projectLateralMax(self, 1, time)) + 0;
+                //left = radar.getBearingTo(enemy.projectLateralMax(self, -1, time)) + 0;
+                //right = radar.getBearingTo(enemy.projectLateralMax(self, 1, time)) + 0;
+                //System.out.println("[State] Arc member: " + enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
+                left = radar.getBearingTo(enemy.projectLateralNew(self, -1, time)) + 0;
+                right = radar.getBearingTo(enemy.projectLateralNew(self, 1, time)) + 0;
+                System.out.println("[State] Arc member: " + enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
                 if (Utility.angleBetween(left, right) > Utility.angleBetween(right, left)) {
                     temp = left;
                     left = right;
                     right = temp;
                     //System.out.println("[State] getArc switch");
                 }
-                //System.out.println("[State] Arc member: " + enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
+                System.out.println("[State] Arc member: " + enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
                 if (Double.isNaN(retval[0])) {
                     retval[0] = left;
                     retval[1] = right;

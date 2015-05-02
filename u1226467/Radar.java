@@ -12,8 +12,11 @@ public class Radar {
     protected static int    RADAR_45  = 3;
     protected static int    AGE_180   = 8;
     protected static int    NUM_180   = 2;
+    protected static int    AGE_45    = 4;
     protected static double EXTRA_180 = 0.5;
     protected static double PERC_180  = 1.2;
+    protected static double EXTRA_45 = 0.25;
+    protected static double PERC_45  = 1.1;
     protected static int    AGE_360   = 40;
 
     protected Robot robot;
@@ -67,7 +70,7 @@ public class Radar {
         return (working != RADAR_0);
     }
 
-    public void doStrategy() {
+    public void setStrategy() {
         double turn = Utility.angleBetween(getRadarHeadingRadians(), heading);
         int turndir = 1;
         if (turn > Math.PI) {
@@ -80,11 +83,11 @@ public class Radar {
         }
 
         if (state.getRemaining() == 1) {
-            if (state.getScanned() == 1) {
-                System.out.println("[Radar] Forced duel");
+            if (state.getScanned(AGE_45) == 1) {
+                System.out.println("[Radar] 45");
                 do45();
             } else {
-                System.out.println("[Radar] Forced search for duel");
+                System.out.println("[Radar] Regressing 45->360");
                 do360();
             }
         } else if (isActive()) {
@@ -132,7 +135,11 @@ public class Radar {
     }
 
     protected void do45() {
-        System.out.println("[Radar] do45");
+        doOscillate(RADAR_45, AGE_45, EXTRA_45, PERC_45);
+    }
+
+    protected void do180() {
+        doOscillate(RADAR_180, AGE_180, EXTRA_180, PERC_180);
     }
 
     protected void do360() {
@@ -146,14 +153,10 @@ public class Radar {
         this.direction = direction;
     }
 
-    private double pad180(double radians) {
-        return Utility.fixAngle(Math.max(radians*PERC_180, radians+EXTRA_180));
-    }
-
-    protected void do180() {
-        System.out.println("[Radar] do180");
-        setRadar(RADAR_180);
-        names = state.getScannedNames(AGE_180);
+    protected void doOscillate(int type, int age, double flat, double percent) {
+        System.out.println("[Radar] doOscillate");
+        setRadar(type);
+        names = state.getScannedNames(age);
         double angles[] = state.getArc();
         angles[0] = Utility.fixAngle(angles[0] - heading);
         angles[1] = Utility.fixAngle(angles[1] - heading);
@@ -161,33 +164,37 @@ public class Radar {
         System.out.println("[Radar] Radar heading: "+robot.getRadarHeading()+" ("+heading+")");
         System.out.println("[Radar] Arc size: "+Math.toDegrees(Utility.angleBetween(angles[0], angles[1])));
         if (Utility.angleBetween(angles[0], angles[1]) > (Math.PI)) {
-            System.out.println("[Radar] Unsuitable 180, regressing to 360");
+            System.out.println("[Radar] Unsuitable, regressing to 360");
             do360();
         } else {
             if (!Utility.isAngleBetween(0, angles[0], angles[1])) {
                 if (Utility.angleBetween(0, angles[0]) < Utility.angleBetween(angles[1], 0)) {
-                    angle = pad180(angles[1]);
+                    angle = pad(angles[1], flat, percent);
                     direction = RIGHT;
                 } else {
-                    angle = pad180(Utility.fixAngle(-angles[0]));
+                    angle = pad(Utility.fixAngle(-angles[0]), flat, percent);
                     direction = LEFT;
                 }
             } else {
                 if (Utility.angleBetween(0, angles[1]) < Utility.angleBetween(angles[0], 0)) {
-                    angle = pad180(angles[1]);
+                    angle = pad(angles[1], flat, percent);
                     direction = RIGHT;
-                    angle2 = pad180(Utility.fixAngle(-angles[0])) + angle;
+                    angle2 = pad(Utility.fixAngle(-angles[0]), flat, percent) + angle;
                     direction2 = LEFT;
                 } else {
-                    angle = pad180(Utility.fixAngle(-angles[0]));
+                    angle = pad(Utility.fixAngle(-angles[0]), flat, percent);
                     direction = LEFT;
-                    angle2 = pad180(angles[1]) + angle;
+                    angle2 = pad(angles[1], flat, percent) + angle;
                     direction2 = RIGHT;
                 }
             }
         }
         System.out.println("[Radar] First turn: "+direction*Math.toDegrees(angle));
         System.out.println("[Radar] Second turn: "+direction2*Math.toDegrees(angle2));
+    }
+
+    protected double pad(double radians, double flat, double percent) {
+        return Utility.fixAngle(Math.max(radians*percent, radians+flat));
     }
 
     public void turn() {
@@ -221,7 +228,7 @@ public class Radar {
         return (Math.abs(this.direction*angle-direction*radians) < angle);
     }
 
-    public void turned(double radians, int direction) {
+    protected void turned(double radians, int direction) {
         if (this.direction == direction) {
             angle -= radians;
             if (angle < 0) {
@@ -246,7 +253,6 @@ public class Radar {
     }
 
     public void onScannedRobot(ScannedRobotEvent e) {
-        System.out.println(Arrays.toString(names.toArray()));
         if (names.contains(e.getName())) {
             names.remove(e.getName());
             if (names.isEmpty() && working == RADAR_180) {
@@ -258,5 +264,9 @@ public class Radar {
 
     public double getRadarHeadingRadians() {
         return Math.toRadians(robot.getRadarHeading());
+    }
+
+    public double getHeading() {
+        return getRadarHeadingRadians();
     }
 }
