@@ -15,7 +15,7 @@ public class MyRobot extends Robot
 	private static double RAM_LIMIT   = 0.9;
 
 	// state
-	private State state;
+	private static State state;
 	private Rectangle arena;
 	private long previousTime;
 	private double previousEnergy;
@@ -23,12 +23,18 @@ public class MyRobot extends Robot
 	private int mode;
 	// radar
 	Radar radar;
+	boolean lastTarget;
 	// movement
-	SurfPilot surfer;
+	private static SurfPilot surfer;
+
 
 	public void run() {
-		// void turning gun with robot
-		setAdjustGunForRobotTurn(false);
+		// Static vars for inter run
+		State state = MyRobot.state;
+		SurfPilot surfer = MyRobot.surfer;
+
+		// avoid turning gun with robot
+		setAdjustGunForRobotTurn(true);
 
 		// state
 		previousTime = -1;
@@ -42,8 +48,10 @@ public class MyRobot extends Robot
 		mode = 0;
 		// radar
 		radar = new Radar(this, state);
+		lastTarget = false;
 		// movement
-		surfer = new SurfPilot(state, null, arena);
+		surfer = new SurfPilot(this, state, arena);
+		//whitehole = new WhiteHole(this, state, arena);
 
 		// temp stuff
 		MovementInformation move;
@@ -57,12 +65,22 @@ public class MyRobot extends Robot
 				System.out.println("------ Calculations -----");
 				// Calculations
 				System.out.println(state);
+				if (state.getRemaining() == 1 && !lastTarget && state.getAlive().size() > 1) {
+					for (String target : state.getAlive()) {
+						if (!target.equals(getName())) {
+							radar.setTarget(target);
+							surfer.setTarget(target);
+							lastTarget = true;
+						}
+					}
+				} else {
+
+				}
 				radar.setStrategy();
 				surfer.update(getTime());
-				surfer.setTarget(radar.getTarget());
 				System.out.println("------- Operations ------");
 				// Operations - should block here
-				move = surfer.move();
+				surfer.move();
 				state.update(getTime()+1);
 				radar.scan();
 				radar.gunLinear(null);
@@ -82,12 +100,18 @@ public class MyRobot extends Robot
 
 	public void onScannedRobot(ScannedRobotEvent e) {
 		Snapshot snap = new Snapshot(e, this);
+		System.out.println(snap);
 		state.addSnapshot(snap);
-		//System.out.println("[State] Added "+snap.name+" snapshot.");
-		System.out.println("[Robot] !!! Passing to radar");
 		radar.onScannedRobot(e);
-		System.out.println("[Robot] !!! Passing to pilot");
 		surfer.onScannedRobot(e);
+		// take potshot
+		if (getEnergy() > 10 && radar.isFiring()) {
+			System.out.println("[Scanning] potshot");
+			if (getGunHeat() == 0) {
+				double bulletPower = Utility.constrain(500/state.getSelf().distanceTo(snap), Rules.MIN_BULLET_POWER, Rules.MAX_BULLET_POWER);
+				fireBullet(bulletPower);
+			}
+		}
 	}
 
 	public void onHitByBullet(HitByBulletEvent e) {
@@ -97,8 +121,7 @@ public class MyRobot extends Robot
 	// Should not happen under normal circumstances
 	public void onHitWall(HitWallEvent e) {
 		System.out.println("[onHitWall] Moving 180-100");
-		turnRight(180);
-		ahead(100);
+		back(100);
 	}
 
 	public void onHitRobot(HitRobotEvent e) {
@@ -127,13 +150,40 @@ public class MyRobot extends Robot
 	}
 
 	//TODO
-	public void onRobotDeath(RobotDeathEvent e) {
+	public void onBulletHit(BulletHitEvent e) {
 
 	}
 
 	//TODO
-	public void onRoundEnded(RoundEndedEvent e) {
+	public void onBulletHitBullet(BulletHitBulletEvent e) {
 
+	}
+
+	//TODO
+	public void onBulletMissed(BulletMissedEvent e) {
+
+	}
+
+	//TODO
+	public void onDeath(DeathEvent e) {
+
+	}
+
+	//TODO
+	public void onBattleEnded(BattleEndedEvent e) {
+
+	}
+
+	//TODO
+	public void onRobotDeath(RobotDeathEvent e) {
+		state.onRobotDeath(e);
+	}
+
+	//TODO
+	public void onRoundEnded(RoundEndedEvent e) {
+		state.reset();
+		radar.reset();
+		lastTarget = false;
 	}
 
 	//TODO

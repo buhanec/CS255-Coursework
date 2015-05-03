@@ -8,8 +8,9 @@ public class State {
     private static int THRESHOLD_180 = 3;
 
     private Snapshot[][] history;
-    private boolean[] active;
     private Map<String, Integer> ids;
+    private Set<String> alive;
+    private Set<String> dead;
     private int id;
     private int remaining;
     private int total;
@@ -21,15 +22,39 @@ public class State {
 
     State(int robots, long time) {
         history = new Snapshot[HISTORY][robots];
-        active = new boolean[robots];
-        for (int i = 0; i < robots; i++) {
-            active[i] = true;
-        }
         ids = new HashMap<String, Integer>(robots);
+        alive = new HashSet<String>();
+        dead = new HashSet<String>();
         remaining = robots;
         total = robots;
         this.time = time;
         id = 0;
+    }
+
+    public void reset() {
+        history = new Snapshot[HISTORY][total];
+        alive.addAll(dead);
+        dead.clear();
+        remaining = total;
+        time = 0;
+    }
+
+    public boolean isAlive(String name) {
+        return alive.contains(name);
+    }
+
+    //todo:scope
+    public Set<String> getAlive() {
+        return alive;
+    }
+
+    public boolean isDead(String name) {
+        return dead.contains(name);
+    }
+
+    //todo:scope
+    public Set<String> getDead() {
+        return dead;
     }
 
     public void update() {
@@ -84,6 +109,18 @@ public class State {
         return retval;
     }
 
+    public void onRobotDeath(RobotDeathEvent e) {
+        if (alive.contains(e.getName())) {
+            alive.remove(e.getName());
+            dead.add(e.getName());
+        }
+        int id = getId(e.getName());
+        remaining--;
+        for (int i = 0; i < HISTORY; i++) {
+            history[i][id] = null;
+        }
+    }
+
     public int getRemaining() {
         return remaining-1;
     }
@@ -108,6 +145,9 @@ public class State {
     public void addSnapshot(Snapshot snapshot) {
         if (snapshot.getTime() == time) {
             history[0][getId(snapshot.getName())] = snapshot;
+            if (!alive.contains(snapshot.getName())) {
+                alive.add(snapshot.getName());
+            }
         } else {
             System.out.println("[State] my time: " + time + ", snapshot time: " + snapshot.getTime());
         }
@@ -151,6 +191,9 @@ public class State {
     }
 
     public Snapshot getSelf() {
+        if (history[0][0] == null) {
+            return history[1][0];
+        }
         return history[0][0];
     }
 
