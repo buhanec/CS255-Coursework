@@ -43,6 +43,7 @@ public class BasicSurfer extends AdvancedRobot {
         } while (true);
     }
 
+    // --> onScannedRobot
     public void onScannedRobot(ScannedRobotEvent e) {
         _myLocation = new Point2D.Double(getX(), getY());
 
@@ -82,6 +83,7 @@ public class BasicSurfer extends AdvancedRobot {
         // gun code would go here...
     }
 
+    // --> update
     public void updateWaves() {
         for (int x = 0; x < _enemyWaves.size(); x++) {
             EnemyWave ew = (EnemyWave)_enemyWaves.get(x);
@@ -95,6 +97,7 @@ public class BasicSurfer extends AdvancedRobot {
         }
     }
 
+    // --> getWave
     public EnemyWave getClosestSurfableWave() {
         double closestDistance = 50000; // I juse use some very big number here
         EnemyWave surfWave = null;
@@ -113,6 +116,7 @@ public class BasicSurfer extends AdvancedRobot {
         return surfWave;
     }
 
+    // --> getFactorIndex
     // Given the EnemyWave that the bullet was on, and the point where we
     // were hit, calculate the index into our stat array for that factor.
     public static int getFactorIndex(EnemyWave ew, Point2D.Double targetLocation) {
@@ -126,6 +130,7 @@ public class BasicSurfer extends AdvancedRobot {
             BINS - 1);
     }
 
+    // --> log
     // Given the EnemyWave that the bullet was on, and the point where we
     // were hit, update our stat array to reflect the danger in that area.
     public void logHit(EnemyWave ew, Point2D.Double targetLocation) {
@@ -139,6 +144,7 @@ public class BasicSurfer extends AdvancedRobot {
         }
     }
 
+    // --> onHitByBullet
     public void onHitByBullet(HitByBulletEvent e) {
         // If the _enemyWaves collection is empty, we must have missed the
         // detection of this wave somehow.
@@ -169,6 +175,7 @@ public class BasicSurfer extends AdvancedRobot {
         }
     }
 
+    // --> predict
     // CREDIT: mini sized predictor from Apollon, by rozu
     // http://robowiki.net?Apollon
     public Point2D.Double predictPosition(EnemyWave surfWave, int direction) {
@@ -220,6 +227,7 @@ public class BasicSurfer extends AdvancedRobot {
         return predictedPosition;
     }
 
+    // --> danger
     public double checkDanger(EnemyWave surfWave, int direction) {
         int index = getFactorIndex(surfWave,
             predictPosition(surfWave, direction));
@@ -227,6 +235,7 @@ public class BasicSurfer extends AdvancedRobot {
         return _surfStats[index];
     }
 
+    // --> surf
     public void doSurfing() {
         EnemyWave surfWave = getClosestSurfableWave();
 

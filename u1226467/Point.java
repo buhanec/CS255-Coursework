@@ -32,6 +32,28 @@ public class Point {
         y = point.getY();
     }
 
+    public double getNorthBearingTo(Point point) {
+        return getNorthBearingTo(point.getX(), point.getY());
+    }
+
+    public double getNorthBearingTo(double x, double y) {
+        double dx = x - this.x;
+        double dy = y - this.y;
+        double theta = Math.atan2(dy, dx);
+        if (x == 0) {
+            if (y < 0) {
+                return Math.PI;
+            } else {
+                return 0;
+            }
+        } else if (x > 0) {
+            theta = Math.PI/2 - theta;
+        } else {
+            theta = Math.PI*2.5 - theta;
+        }
+        return Utility.fixAngle(theta);
+    }
+
     public String toString() {
         return "("+Math.round(x)+","+Math.round(y)+")";
     }

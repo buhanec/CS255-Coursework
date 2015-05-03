@@ -114,6 +114,10 @@ public class State {
         return getSnapshot(getId(name));
     }
 
+    public Snapshot getPreviousSnapshot(String name) {
+        return getPreviousSnapshot(getId(name));
+    }
+
     public Snapshot getSnapshot(int id) {
         if (id >= this.id) {
             return null;
@@ -121,6 +125,23 @@ public class State {
         for (int i = 0; i < HISTORY; i++) {
             if (history[i][id] != null) {
                 return history[i][id];
+            }
+        }
+        return null;
+    }
+
+    public Snapshot getPreviousSnapshot(int id) {
+        boolean previous = false;
+        if (id >= this.id) {
+            return null;
+        }
+        for (int i = 0; i < HISTORY; i++) {
+            if (history[i][id] != null) {
+                if (previous) {
+                    return history[i][id];
+                } else {
+                    previous = true;
+                }
             }
         }
         return null;

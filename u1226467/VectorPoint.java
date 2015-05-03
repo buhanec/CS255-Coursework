@@ -187,7 +187,7 @@ public class VectorPoint extends DirectedPoint {
                 }
             }
         }
-        temp = Math.min(Rules.MAX_TURN_RATE_RADIANS, temp);
+        temp = Math.min(Utility.maxTurn(Math.abs(speed)), temp);
         if (dir == 1) {
             retval.setHeading(Utility.fixAngle(heading + temp));
         } else {

@@ -4,7 +4,7 @@ import robocode.*;
 import java.util.*;
 import robocode.util.Utils;
 
-public class SurfPilot extends AdvancedRobot {
+public class SurfBot extends AdvancedRobot {
     protected static int BINS = 47;
     protected static double WALL_STICK = 160;
     protected static double WALL_STICK_PERCENT = 0.25;
@@ -26,12 +26,12 @@ public class SurfPilot extends AdvancedRobot {
     protected List<Double> directions;
     protected List<Double> bearings;
 
-    SurfPilot(State state, String target, double arenaWidth, double arenaHeight) {
+    public void run() {
         random = new Random();
 
-        this.state = state;
+        this.state = new State(getOthers() + 1);;
         this.target = target;
-        arena = new Rectangle(0, 0, arenaWidth, arenaHeight);
+        arena = new Rectangle(0, 0, getBattleFieldWidth(), getBattleFieldHeight());
         wallSmoothingFactor = Math.min(Math.min(arena.getWidth(), arena.getHeight())*WALL_STICK_PERCENT, WALL_STICK);
 
         minWaves = new ArrayList<Wave>();
@@ -39,15 +39,48 @@ public class SurfPilot extends AdvancedRobot {
         maxWaves = new ArrayList<Wave>();
         directions = new ArrayList<Double>();
         bearings = new ArrayList<Double>();
+
+        long previousTime = -1;
+
+        while(true) {
+            if (getTime() >= previousTime + 1) {
+                System.out.println("=========================");
+                System.out.println("Current time: "+getTime());
+                // Check for skipped time
+                if (getTime() > previousTime + 1) {
+                    System.out.println("Skipped time "+previousTime+" to "+getTime());
+                }
+                previousTime = getTime();
+                System.out.println("-------------------------");
+                state.update(getTime()+1);
+                setTurnRadarRightRadians(Math.PI/4);
+            } else {
+                doNothing();
+            }
+        }
     }
 
     public void setTarget(String target) {
         this.target = target;
     }
 
-    // courtesy of wiki tutorial
+    public void onStatus(StatusEvent e)  {
+        if (state != null) {
+            Snapshot snap = new Snapshot(getName(), e.getStatus());
+            state.addSnapshot(snap);
+            System.out.println("[State] Added "+snap.name+" snapshot.");
+        }
+    }
+
     public void onScannedRobot(ScannedRobotEvent e) {
-        System.out.println("[Surfer] ON SCANNED ROBOT");
+        Snapshot snap = new Snapshot(e, this);
+        state.addSnapshot(snap);
+        System.out.println("[State] Added "+snap.name+" snapshot.");
+        onScannedRobot2(e);
+    }
+
+    // courtesy of wiki tutorial
+    public void onScannedRobot2(ScannedRobotEvent e) {
         // check if we scanned the right robot
         Snapshot current;
         if (e.getName().equals(target)) {
@@ -61,14 +94,15 @@ public class SurfPilot extends AdvancedRobot {
         // calculate our lateral velocity and the north bearing of the target
         double selfLateral = Utility.lateral(self.getSpeed(), self.getBearingTo(current.getX(), current.getY()));
         double northBearing = self.getNorthBearingTo(current.getX(), current.getY());
+        //TODO:remove
+        setTurnRadarRightRadians(Utils.normalRelativeAngle(northBearing - getRadarHeadingRadians()) * 2);
+        //TODO:endremove
         directions.add(0, selfLateral);
         bearings.add(0, northBearing);
         // calculate bullet information
         if (previous != null) {
-            System.out.println("[Surfer] HEY THERE");
             double bulletEnergy = previous.getEnergy()-current.getEnergy();
             if (Utility.containedii(bulletEnergy, Rules.MIN_BULLET_POWER-0.0001, Rules.MAX_BULLET_POWER+0.0001) && directions.size() > 2) {
-                System.out.println("[Surfer] Wave detected");
                 long bulletTime, bulletMinTime, bulletMaxTime;
                 Wave min, avg, max;
                 if (current.getTime()-previous.getTime() > 1) {
@@ -107,9 +141,9 @@ public class SurfPilot extends AdvancedRobot {
                 minWaves.add(min);
                 waves.add(avg);
                 maxWaves.add(max);
+                update(e.getTime());
                 //TODO
-                //update(e.getTime());
-                //surf();
+                surf();
                 //gun();
             }
         }
@@ -248,8 +282,7 @@ public class SurfPilot extends AdvancedRobot {
         return stats[index];
     }
 
-    public MovementInformation move() {
-        System.out.println("[Surfer] surfing");
+    public void surf() {
         Wave wave = getWave();
         DirectedPoint self = state.getSelf();
         double angle = wallSmoothing(self, self.getHeading(), (random.nextBoolean() ? -1 : 1));
@@ -264,22 +297,9 @@ public class SurfPilot extends AdvancedRobot {
             }
         }
 
-        return adjust(angle);
-    }
-
-    public MovementInformation adjust(double angle) {
-        angle = Utility.fixAngle(angle - state.getSelf().getHeading());
-        MovementInformation retval;
-        if (Utility.isAngleBetween(angle, 0, Math.PI/2)) {
-            retval = new MovementInformation(angle, 1, 100, 1);
-        } else if (Utility.isAngleBetween(angle, 0, Math.PI)) {
-            retval = new MovementInformation(Math.PI-angle, -1, 100, -1);
-        } else if (Utility.isAngleBetween(angle, 0, 3*Math.PI/2)) {
-            retval = new MovementInformation(angle-Math.PI, 1, 100, -1);
-        } else {
-            retval = new MovementInformation(2*Math.PI-angle, -1, 100, 1);
-        }
-        return retval;
+        //TODO
+        setBackAsFront(this, angle);
+        //return null;
     }
 
     // Simple iterative wall smoothing
@@ -288,5 +308,25 @@ public class SurfPilot extends AdvancedRobot {
             angle += direction*SMOOTHING_STEP;
         }
         return angle;
+    }
+
+    public static void setBackAsFront(AdvancedRobot robot, double goAngle) {
+        double angle =
+            Utils.normalRelativeAngle(goAngle - robot.getHeadingRadians());
+        if (Math.abs(angle) > (Math.PI/2)) {
+            if (angle < 0) {
+                robot.setTurnRightRadians(Math.PI + angle);
+            } else {
+                robot.setTurnLeftRadians(Math.PI - angle);
+            }
+            robot.setBack(100);
+        } else {
+            if (angle < 0) {
+                robot.setTurnLeftRadians(-1*angle);
+           } else {
+                robot.setTurnRightRadians(angle);
+           }
+            robot.setAhead(100);
+        }
     }
 }

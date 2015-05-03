@@ -39,6 +39,7 @@ public class Radar {
     protected int previous;
     protected int last360;
     protected Set<String> names;
+    protected String target;
 
     protected int uniqueScanned;
 
@@ -62,12 +63,21 @@ public class Radar {
         previous = RADAR_0;
         last360 = -AGE_360-1;
         names = new HashSet<String>();
+        target = null;
 
         uniqueScanned = 0;
     }
 
     public boolean isActive() {
         return (working != RADAR_0);
+    }
+
+    public String getTarget() {
+        if (state.getScanned(AGE_45) == 1) {
+            return target;
+        } else {
+            return null;
+        }
     }
 
     public void setStrategy() {
@@ -83,6 +93,9 @@ public class Radar {
         }
 
         if (state.getRemaining() == 1) {
+            for (String t : state.getScannedNames(AGE_45)) {
+                target = t;
+            }
             if (state.getScanned(AGE_45) == 1) {
                 System.out.println("[Radar] 45");
                 do45();

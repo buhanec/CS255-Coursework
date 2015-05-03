@@ -21,13 +21,12 @@ public class MyRobot extends Robot
 	// radar
 	Radar radar;
 	// movement
-	private boolean sit;
+	SurfPilot surfer;
 
 	public void run() {
 		// state
 		previousTime = -1;
 		previousEnergy = getEnergy();
-		sit = false;
 		state = new State(getOthers() + 1);
 		System.out.println("[State] Initialised for " + (getOthers() + 1));
 		Snapshot snap = new Snapshot(this);
@@ -36,7 +35,7 @@ public class MyRobot extends Robot
 		// radar
 		radar = new Radar(this, state);
 		// movement
-		sit = true;
+		surfer = new SurfPilot(state, null, getBattleFieldWidth(), getBattleFieldHeight());
 
 		while(true) {
 			if (getTime() >= previousTime + 1) {
@@ -55,35 +54,25 @@ public class MyRobot extends Robot
 				} else {
 					System.out.println("[Energy] delta: " + (previousEnergy - getEnergy()));
 				}
+				previousEnergy = getEnergy();
 				// Targetting TODO
 				System.out.println("-------------------------");
 				System.out.println(state);
-				// Radar
+				// Calculations
 				radar.setStrategy();
+				surfer.update(getTime());
+				surfer.setTarget(radar.getTarget());
 				System.out.println("-------------------------");
 				state.update(getTime()+1);
+				// Operations
 				radar.turn();
+				surfer.move();
+				//gun.fire();
 			} else {
 				doNothing();
 			}
 		}
 	}
-
-	//TODO
-	/*
-	private void move() {
-		if (!sit) {
-			if (targetting.getTarget() != null) {
-				pilot = targettingPilot;
-			} else {
-				pilot = runningPilot;
-			}
-		} else {
-			pilot = sittingPilot;
-		}
-		pilot.move();
-	}
-	//*/
 
 	public void onStatus(StatusEvent e)  {
 		if (state != null) {
@@ -94,13 +83,16 @@ public class MyRobot extends Robot
 	}
 
 	public void onScannedRobot(ScannedRobotEvent e) {
-		radar.onScannedRobot(e);
 		Snapshot snap = new Snapshot(e, this);
-		VectorPoint self = new VectorPoint(state.getSelf());
-		self.setSpeed(10);
-		VectorPoint other = new VectorPoint(snap);
-		other.setSpeed(5);
 		state.addSnapshot(snap);
-		System.out.println("[State] Added "+snap.name+" snapshot.");
+		//System.out.println("[State] Added "+snap.name+" snapshot.");
+		System.out.println("[Robot] !!! Passing to radar");
+		radar.onScannedRobot(e);
+		System.out.println("[Robot] !!! Passing to pilot");
+		surfer.onScannedRobot(e);
+	}
+
+	public void onHitByBullet(HitByBulletEvent e) {
+		surfer.onHitByBullet(e);
 	}
 }

@@ -51,6 +51,10 @@ public class Utility {;
         return (angleBetween(left, right) > angleBetween(angle, right));
     }
 
+    public static double maxTurn(double speed) {
+        return Math.min(Rules.MAX_TURN_RATE_RADIANS, fixAngle(Math.PI/720d*(40d - 3d*Math.abs(speed))));
+    }
+
     public static double fixAngle(double angle) {
         while (angle < 0) {
             angle += 2*Math.PI;
