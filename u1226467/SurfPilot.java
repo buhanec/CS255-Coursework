@@ -26,12 +26,12 @@ public class SurfPilot extends AdvancedRobot {
     protected List<Double> directions;
     protected List<Double> bearings;
 
-    SurfPilot(State state, String target, double arenaWidth, double arenaHeight) {
+    SurfPilot(State state, String target, Rectangle arena) {
         random = new Random();
 
         this.state = state;
         this.target = target;
-        arena = new Rectangle(0, 0, arenaWidth, arenaHeight);
+        this.arena = arena;
         wallSmoothingFactor = Math.min(Math.min(arena.getWidth(), arena.getHeight())*WALL_STICK_PERCENT, WALL_STICK);
 
         minWaves = new ArrayList<Wave>();
