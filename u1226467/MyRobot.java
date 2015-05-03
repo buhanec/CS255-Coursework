@@ -37,6 +37,9 @@ public class MyRobot extends Robot
 		// movement
 		surfer = new SurfPilot(state, null, getBattleFieldWidth(), getBattleFieldHeight());
 
+		// temp stuff
+		MovementInformation move;
+
 		while(true) {
 			if (getTime() >= previousTime + 1) {
 				System.out.println("=========================");
@@ -55,18 +58,17 @@ public class MyRobot extends Robot
 					System.out.println("[Energy] delta: " + (previousEnergy - getEnergy()));
 				}
 				previousEnergy = getEnergy();
-				// Targetting TODO
 				System.out.println("-------------------------");
-				System.out.println(state);
 				// Calculations
+				System.out.println(state);
 				radar.setStrategy();
 				surfer.update(getTime());
 				surfer.setTarget(radar.getTarget());
 				System.out.println("-------------------------");
+				// Operations - should block here
 				state.update(getTime()+1);
-				// Operations
+				move = surfer.move();
 				radar.turn();
-				surfer.move();
 				//gun.fire();
 			} else {
 				doNothing();
