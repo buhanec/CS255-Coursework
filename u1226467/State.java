@@ -53,6 +53,9 @@ public class State {
     }
 
     public int getId(String name) {
+        if (name == null) {
+            return 0;
+        }
         if (ids.get(name) == null) {
             ids.put(name, id++);
             System.out.println("[State] Assigned "+name+" id "+(id-1));
