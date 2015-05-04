@@ -13,6 +13,8 @@ public class MyRobot extends Robot
 	private static double MIN_PADDING = 100;
 	private static double DIRECTION   = 0.1;
 	private static double RAM_LIMIT   = 0.9;
+	private static double FIRE_FACTOR = 0.5;
+	private static long   FIRE_TIME   = 18;
 
 	// state
 	private static State state;
@@ -22,10 +24,13 @@ public class MyRobot extends Robot
 	private double energyDecay;
 	private int mode;
 	// radar
-	Radar radar;
-	boolean lastTarget;
+	private Radar radar;
+	private boolean lastTarget;
+	private boolean shouldFire;
+	private long fireTurns;
 	// movement
 	private static SurfPilot surfer;
+	private static WhiteHole hole;
 
 
 	public void run() {
@@ -45,13 +50,12 @@ public class MyRobot extends Robot
 		// radar
 		radar = new Radar(this, state);
 		lastTarget = false;
-		String gunTarget = null;
+		shouldFire = false;
+		fireTurns = 0;
+		String target = null;
 		// movement
 		surfer = new SurfPilot(this, state, arena);
-		//whitehole = new WhiteHole(this, state, arena);
-
-		// temp stuff
-		MovementInformation move;
+		hole = new WhiteHole(this, state, arena);
 
 		while(true) {
 			if (getTime() >= previousTime + 1) {
@@ -59,35 +63,42 @@ public class MyRobot extends Robot
 				System.out.println("Current time: "+getTime());
 				previousTime = getTime();
 				previousEnergy = getEnergy();
-				System.out.println("------ Calculations -----");
-				// Calculations
-				//System.out.println(state);
+				System.out.println("------- Operations ------");
+				// Radar decisions - scan or target
+				fireTurns++;
 				if (state.getRemaining() == 1 && !lastTarget && state.getAlive().size() > 1) {
-					for (String target : state.getAlive()) {
-						if (!target.equals(getName())) {
-							gunTarget = target;
+					for (String t : state.getAlive()) {
+						if (!t.equals(getName())) {
+							target = t;
 							radar.setTarget(target);
 							surfer.setTarget(target);
 							lastTarget = true;
 						}
 					}
-				} else {
-
 				}
-				radar.setStrategy();
+				if (radar.isFiring()) {
+					// check if target is still good
+				} else if ((state.getRemaining() > 1 && state.getScanned() >= state.getRemaining()*FIRE_FACTOR) ||
+				    (radar.hasScanned() && fireTurns > FIRE_TIME)) {
+					// find best target here
+					target = null;
+					fireTurns = 0;
+				} else if (!lastTarget) {
+					target = null;
+				}
+				// Movement updates
 				surfer.update(getTime());
-				System.out.println("------- Operations ------");
+				hole.update(getTime());
+				System.out.println("--------- Radar ---------");
 				// Operations - should block here
 				//surfer.move();
 				state.update(getTime()+1);
-				System.out.println("---------- Scan ---------");
-				radar.scan();
-				//System.out.println("---------- Fire ---------");
-				//if (state.getSnapshot(gunTarget) != null) {
-				//	if (radar.isFiring() || (state.getSnapshot(gunTarget).getTime() > getTime()-2)) {
-				//		radar.gunSimple(gunTarget);
-				//	}
-				//}
+				if (target != null && getGunHeat() == 0) {
+					radar.gunSimple(target);
+				} else {
+					radar.setStrategy();
+					radar.scan();
+				}
 			} else {
 				doNothing();
 			}
@@ -191,6 +202,8 @@ public class MyRobot extends Robot
 		state.reset();
 		radar.reset();
 		lastTarget = false;
+		shouldFire = false;
+		fireTurns = 0;
 	}
 
 	//TODO

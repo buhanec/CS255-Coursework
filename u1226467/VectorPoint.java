@@ -25,85 +25,130 @@ public class VectorPoint extends DirectedPoint {
         speed = vector.speed;
     }
 
+    /**
+     * Returns the VectorPoint's speed
+     * @return speed
+     */
     public double getSpeed() {
         return speed;
     }
 
+    /**
+     * Sets the VectorPoint's speed
+     * @param speed speed
+     */
     public void setSpeed(double speed) {
         this.speed = speed;
     }
 
+    /**
+     * Sets the vector (heading, speed) of the VectorPoint.
+     * @param heading heading of the vector in radians
+     * @param speed   speed
+     */
     public void setVector(double heading, double speed) {
         this.heading = heading;
         this.speed = speed;
     }
 
+    /**
+     * Performs a 1-step projection of the VectorPoint using the linear
+     * projection method.
+     * See {@link #projectLinear(long)}.
+     * @return projected point
+     */
     public VectorPoint project() {
         return projectLinear(1);
     }
 
-    public VectorPoint projectMax() {
-        return projectLinearMax(1);
-    }
-
-    public VectorPoint projectMin() {
-        return projectLinearMin(1);
-    }
-
+    /**
+     * Performs a projection of the VectorPoint using linear projection.
+     * @param  time number of steps over which to project
+     * @return      projected point
+     */
     public VectorPoint projectLinear(long time) {
         double x = this.x + Math.sin(heading)*speed*time;
         double y = this.y + Math.cos(heading)*speed*time;
         return new VectorPoint(x, y, heading, speed);
     }
 
-    public VectorPoint projectLinearMax(long time) {
-        double distance = 0;
-        double speed = this.speed;
-        for (int i = 0; i < time; i++) {
-            if (speed < 0) {
-                speed = Math.min(0, speed + Rules.DECELERATION);
-            } else if (speed < Rules.MAX_VELOCITY) {
-                speed = Math.min(Rules.MAX_VELOCITY, speed + Rules.ACCELERATION);
-            }
-            distance += speed;
-        }
-        double x = this.x + Math.sin(heading)*distance;
-        double y = this.y + Math.cos(heading)*distance;
-        return new VectorPoint(x, y, heading, speed);
-    }
-
+    /**
+     * Performs the minimal linear projection of the VectorPoint.
+     * @param  time number of steps over which to project
+     * @return      projected point
+     */
     public VectorPoint projectLinearMin(long time) {
         double distance = 0;
         double speed = this.speed;
+        double x, y;
         for (int i = 0; i < time; i++) {
             if (speed > 0) {
                 speed = Math.max(0, speed - Rules.DECELERATION);
             } else if (speed <= 0) {
-                speed = Math.max(-Rules.MAX_VELOCITY, speed - Rules.ACCELERATION);
+                speed = Math.max(-Rules.MAX_VELOCITY,
+                                 speed - Rules.ACCELERATION);
             }
             distance += speed;
         }
-        double x = this.x + Math.sin(heading)*distance;
-        double y = this.y + Math.cos(heading)*distance;
+        x = this.x + Math.sin(heading)*distance;
+        y = this.y + Math.cos(heading)*distance;
         return new VectorPoint(x, y, heading, speed);
     }
 
-    public VectorPoint projectLateralNew(VectorPoint target, int direction, long time) {
+    /**
+     * Performs the maximal linear projection of the VectorPoint.
+     * @param  time number of steps over which to project
+     * @return      projected point
+     */
+    public VectorPoint projectLinearMax(long time) {
+        double distance = 0;
+        double speed = this.speed;
+        double x, y;
+        for (int i = 0; i < time; i++) {
+            if (speed < 0) {
+                speed = Math.min(0, speed + Rules.DECELERATION);
+            } else if (speed < Rules.MAX_VELOCITY) {
+                speed = Math.min(Rules.MAX_VELOCITY,
+                                 speed + Rules.ACCELERATION);
+            }
+            distance += speed;
+        }
+        x = this.x + Math.sin(heading)*distance;
+        y = this.y + Math.cos(heading)*distance;
+        return new VectorPoint(x, y, heading, speed);
+    }
+
+    /**
+     * Performs a worst-case lateral projection of a given target VectorPoint
+     * around the current VectorPoint. Effectively helps determine the maximum
+     * angular change to face the target point in either direction.
+     * See {@link #projectLateral(VectorPoint, int)}.
+     * @param  target    target VectorPoint
+     * @param  direction direction of simulation, clockwise being 1,
+     *                   anticlockise being -1
+     * @param  time      number of steps over which to project
+     * @return           projectedd point
+     */
+    public VectorPoint projectLateral(VectorPoint target, int direction,
+                                      long time) {
         VectorPoint retval = this;
         for (int i = 0; i < time; i++) {
-            retval = retval.projectLateralNew(target, direction);
+            retval = retval.projectLateral(target, direction);
         }
         return retval;
     }
 
-    public VectorPoint projectLateralNew(VectorPoint target, int direction) {
-        return projectLateralNew(this, target, direction);
-    }
-
-    public VectorPoint projectLateralNew(VectorPoint source, VectorPoint target, int direction) {
-        VectorPoint origin = new VectorPoint(source);
-        origin.project();
-        VectorPoint retval = new VectorPoint(source);
+    /**
+     * Performs a worst-case lateral projection of a given target VectorPoint
+     * around the current VectorPoint. Effectively helps determine the maximum
+     * angular change to face the target point in either direction.
+     * @param  target    target VectorPoint
+     * @param  direction direction of simulation, clockwise being 1,
+     *                   anticlockise being -1
+     * @return           projectedd point
+     */
+    public VectorPoint projectLateral(VectorPoint target, int direction) {
+        VectorPoint retval = new VectorPoint(this);
         // speed of target
         double max;
         double min;
@@ -118,14 +163,15 @@ public class VectorPoint extends DirectedPoint {
             min = Math.max(-Rules.MAX_VELOCITY, speed - Rules.ACCELERATION);
         }
         // bearing of target
-        double bearing = target.getNorthBearingTo(origin);
+        double bearing = target.getNorthBearingTo(this);
         double heading = target.getHeading();
         double temp;
         double speed;
         int dir = 1;
-        double distance = target.distanceTo(origin);
-        // heading is "right" of bearing to origin, target rotating "left" around origin
-        if (Utility.isAngleBetween(heading, bearing, Utility.fixAngle(bearing+Math.PI))) {
+        double distance = target.distanceTo(this);
+        // heading is "right" of the origin, target rotating "left"
+        if (Utility.isAngleBetween(heading, bearing,
+                                   Utility.fixAngle(bearing+Math.PI))) {
             if (direction == -1) {
                 max = max;
                 speed = max;
@@ -147,7 +193,8 @@ public class VectorPoint extends DirectedPoint {
                     dir = -1;
                 }
             } else if (max < 0) {
-                if (Utility.isAngleBetween(heading, bearing, Utility.fixAngle(bearing+Math.PI/2))) {
+                if (Utility.isAngleBetween(heading, bearing,
+                    Utility.fixAngle(bearing+Math.PI/2))) {
                     dir = -1;
                     temp = Utility.fixAngle(heading-bearing);
                 } else {
@@ -155,7 +202,7 @@ public class VectorPoint extends DirectedPoint {
                     temp = Utility.fixAngle(bearing-bearing);
                 }
             }
-        // heading is "left" of bearing to origin, target rotating "right" around origin
+        // heading is "left" of the origin, target rotating "right"
         } else {
             if (direction == 1) {
                 max = max;
@@ -178,7 +225,8 @@ public class VectorPoint extends DirectedPoint {
                     dir = 1;
                 }
             } else if (max < 0) {
-                if (Utility.isAngleBetween(heading, bearing, Utility.fixAngle(bearing+Math.PI/2))) {
+                if (Utility.isAngleBetween(heading, bearing,
+                    Utility.fixAngle(bearing+Math.PI/2))) {
                     dir = 1;
                     temp = Utility.fixAngle(heading-bearing);
                 } else {
@@ -198,81 +246,8 @@ public class VectorPoint extends DirectedPoint {
         return retval;
     }
 
-    public VectorPoint projectLateralMax(DirectedPoint point, int direction) {
-        VectorPoint retval = new VectorPoint(this);
-        double bearing = point.getBearingTo(this);
-        //System.out.println("---");
-        //System.out.println(Math.toDegrees(point.getHeading())+" "+Math.toDegrees(bearing));
-        double left = Utility.fixAngle(bearing - Math.PI/2 - getHeading());
-        int ldir = 1;
-        double right = Utility.fixAngle(bearing + Math.PI/2 - getHeading());
-        int rdir = 1;
-        //System.out.println(Math.toDegrees(left)+" "+Math.toDegrees(right));
-        double max;
-        double min;
-        // speed
-        if (speed > 0) {
-            max = Math.min(Rules.MAX_VELOCITY, speed + Rules.ACCELERATION);
-            min = Math.max(0, speed - Rules.DECELERATION);
-        } else if (speed == 0) {
-            max = Math.min(Rules.MAX_VELOCITY, Rules.ACCELERATION);
-            min = Math.max(-Rules.MAX_VELOCITY, -Rules.ACCELERATION);
-        } else {
-            max = Math.min(0, speed + Rules.DECELERATION);
-            min = Math.max(-Rules.MAX_VELOCITY, speed - Rules.ACCELERATION);
-        }
-        // get as close to ideal turn values as possible
-        //System.out.println(ldir+" "+Math.toDegrees(left));
-        if (left > Math.PI) {
-            left = left - Math.PI;
-            ldir = -ldir;
-        }
-        left = Math.min(left, Rules.MAX_TURN_RATE_RADIANS);
-        //System.out.println(ldir+" "+Math.toDegrees(left));
-        //System.out.println(rdir+" "+Math.toDegrees(right));
-        if (right > Math.PI) {
-            right = right - Math.PI;
-            rdir = -rdir;
-        }
-        right = Math.min(right, Rules.MAX_TURN_RATE_RADIANS);
-        //System.out.println(rdir+" "+Math.toDegrees(right));
-        // turn turn values in headings
-        left = Utility.fixAngle(getHeading()+(ldir*left));
-        right = Utility.fixAngle(getHeading()+(rdir*right));
-        //System.out.println(Math.toDegrees(left)+" "+Math.toDegrees(right));
-        //System.out.println("---");
-        // determine whether going forwards or backwards maximises lateralness
-        if (direction == 1) {
-            if (Utility.lateral(max, right) > Utility.lateral(min, left)) {
-                retval.setHeading(right);
-                retval.setSpeed(max);
-            } else {
-                retval.setHeading(left);
-                retval.setSpeed(min);
-            }
-        } else {
-            if (Utility.lateral(max, left) < Utility.lateral(min, right)) {
-                retval.setHeading(left);
-                retval.setSpeed(max);
-            } else {
-                retval.setHeading(right);
-                retval.setSpeed(min);
-            }
-        }
-        // project the point in case we ever need the coorinates
-        retval = retval.projectLinear(1);
-        return retval;
-    }
-
-    public VectorPoint projectLateralMax(DirectedPoint point, int direction, long time) {
-        VectorPoint retval = this;
-        for (int i = 0; i < time; i++) {
-            retval = retval.projectLateralMax(point, direction);
-        }
-        return retval;
-    }
-
     public String toString() {
-        return "("+Math.round(x)+","+Math.round(y)+") bearing "+Math.round(Math.toDegrees(heading))+" going "+Math.round(speed);
+        return "("+Math.round(x)+","+Math.round(y)+") bearing "
+            +Math.round(Math.toDegrees(heading))+" going "+Math.round(speed);
     }
 }

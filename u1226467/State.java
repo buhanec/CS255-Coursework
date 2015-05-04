@@ -84,10 +84,8 @@ public class State {
         }
         if (ids.get(name) == null) {
             ids.put(name, id++);
-            //System.out.println("[State] Assigned "+name+" id "+(id-1));
             return id-1;
         } else {
-            //System.out.println("[State] Fetched "+name+" id "+(ids.get(name)));
             return ids.get(name);
         }
     }
@@ -229,32 +227,6 @@ public class State {
         return getArc(self);
     }
 
-    public double[] getArcDebug(DirectedPoint radar) {
-        long time = 1;
-        Snapshot enemy;
-        VectorPoint point;
-        double temp;
-        double left;
-        double right;
-        double[] retval = {0, 0};
-
-        for (int i = 1; i < id; i++) {
-            enemy = getSnapshot(i);
-            if (enemy != null) {
-                System.out.println("[getArc] "+enemy);
-                left = radar.getNorthBearingTo(enemy.projectLateralNew(self, -1, time)) + 0;
-                right = radar.getNorthBearingTo(enemy.projectLateralNew(self, 1, time)) + 0;
-                System.out.println(Math.toDegrees(radar.getHeading()));
-                System.out.println(Math.toDegrees(radar.getBearingTo(enemy)));
-                System.out.println(Math.toDegrees(radar.getNorthBearingTo(enemy)));
-                System.out.println(Math.toDegrees(left));
-                System.out.println(Math.toDegrees(right));
-            }
-        }
-
-        return retval;
-    }
-
     public double[] getArc(DirectedPoint radar) {
         long time = 1;
         VectorPoint self = history[0][0];
@@ -272,8 +244,8 @@ public class State {
                 //left = radar.getBearingTo(enemy.projectLateralMax(self, -1, time)) + 0;
                 //right = radar.getBearingTo(enemy.projectLateralMax(self, 1, time)) + 0;
                 //System.out.println("[State] Arc member: " + enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
-                left = radar.getBearingTo(enemy.projectLateralNew(self, -1, time)) + 0;
-                right = radar.getBearingTo(enemy.projectLateralNew(self, 1, time)) + 0;
+                left = radar.getBearingTo(enemy.projectLateral(self, -1, time)) + 0;
+                right = radar.getBearingTo(enemy.projectLateral(self, 1, time)) + 0;
                 //System.out.println("[State] Arc member: " + enemy.name+" ("+Math.toDegrees(radar.getBearingTo(enemy))+"): "+Math.toDegrees(left)+" - "+Math.toDegrees(right));
                 if (Utility.angleBetween(left, right) > Utility.angleBetween(right, left)) {
                     temp = left;

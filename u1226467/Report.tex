@@ -1,0 +1,353 @@
+% !TEX TS-program = pdflatex
+% !TEX encoding = UTF-8 Unicode
+
+% This is a simple template for a LaTeX document using the "article" class.
+% See "book", "report", "letter" for other types of document.
+
+\documentclass[11pt]{article} % use larger type; default would be 10pt
+
+\usepackage[utf8]{inputenc} % set input encoding (not needed with XeLaTeX)
+
+%%% Examples of Article customizations
+% These packages are optional, depending whether you want the features they provide.
+% See the LaTeX Companion or other references for full information.
+
+%%% PAGE DIMENSIONS
+\usepackage{geometry} % to change the page dimensions
+\geometry{a4paper} % or letterpaper (US) or a5paper or....
+% \geometry{margin=2in} % for example, change the margins to 2 inches all round
+% \geometry{landscape} % set up the page for landscape
+%   read geometry.pdf for detailed page layout information
+
+\usepackage{graphicx} % support the \includegraphics command and options
+
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+%%% PACKAGES
+\usepackage{fullpage}
+\usepackage{amsmath} % mathhhhs
+\usepackage{amsfonts} % sets n shit
+\usepackage{centernot} % easier negations
+%source code
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\definecolor{darkRed}{rgb}{0.6,0,0}
+\definecolor{darkGreen}{rgb}{0,0.6,0}
+\definecolor{darkBlue}{rgb}{0,0,0.6}
+\definecolor{grayFifty}{rgb}{0.5,0.5,0.5}
+\definecolor{graySixty}{rgb}{0.6,0.6,0.6}
+\definecolor{grayc}{rgb}{0.5,0.5,0.5}
+\definecolor{brownIsh}{rgb}{0.5,0.25,0}
+\definecolor{purplec}{rgb}{0.58,0,0.82}
+\definecolor{definec}{rgb}{0.5,0.25,0}
+
+% general stuff
+\usepackage[scaled=1.04]{couriers}
+\lstset{ 
+	backgroundcolor=\color{white},		% background colour
+	basicstyle=\ttfamily\footnotesize,		% font style
+	breakatwhitespace=false,			% automatic breaks only at whitespace
+	breaklines=true,					% sets automatic line breaking
+	captionpos=t,						% sets the caption-position to bottom
+	commentstyle=\color{darkGreen},		% comment style
+	escapeinside={\%*}{*)},				% LaTeX in code
+	extendedchars=true,				% allow 8-bit non-ASCII characters (does not work with UTF-8)
+	frame=single,						% adds a frame around the code
+	keepspaces=true,					% keeps spaces in text
+	keywordstyle=\bfseries\color{darkBlue},	% keyword style
+	numbers=left,						% where to put the line-numbers; possible values are (none, left, right)
+	numbersep=12pt,					% how far the line-numbers are from the code
+	numberstyle=\tiny\color{gray},		% the style that is used for the line-numbers
+	rulecolor=\color{black},				% if not set, the frame-color may be changed on line-breaks within not-black text
+	showspaces=false,					% show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,			% underline spaces within strings only
+	showtabs=false,					% show tabs within strings adding particular underscores
+	stepnumber=1,					% the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{blue},			% string literal style
+	tabsize=4,						% sets default tabsize to 2 spaces
+	title=\lstname						% show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+% language stuff
+\lstset{
+	language=Octave,					% the language of the code
+	deletekeywords={...},				% delete key words from language
+	morekeywords={*,...},				% if you want to add more keywords to the set
+}
+% hacks
+\usepackage{etoolbox}
+\usepackage{cleveref}
+\usepackage{booktabs} % for much better looking tables
+\usepackage{array} % for better arrays (eg matrices) in maths
+\usepackage{paralist} % very flexible & customisable lists (eg. enumerate/itemize, etc.)
+\usepackage{verbatim} % adds environment for commenting out blocks of text & for better verbatim
+\usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
+% These packages are all incorporated in the memoir class to one degree or another...
+
+%%% HEADERS & FOOTERS
+\usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
+\pagestyle{fancy} % options: empty , plain , fancy
+\renewcommand{\headrulewidth}{0pt} % customise the layout...
+\lhead{}\chead{}\rhead{}
+\lfoot{}\cfoot{\thepage}\rfoot{}
+
+%%% SECTION TITLE APPEARANCE
+\usepackage{sectsty}
+\allsectionsfont{\sffamily\mdseries\upshape} % (See the fntguide.pdf for font help)
+% (This matches ConTeXt defaults)
+
+%%% ToC (table of contents) APPEARANCE
+\usepackage[nottoc,notlof,notlot]{tocbibind} % Put the bibliography in the ToC
+\usepackage[titles,subfigure]{tocloft} % Alter the style of the Table of Contents
+\renewcommand{\cftsecfont}{\rmfamily\mdseries\upshape}
+\renewcommand{\cftsecpagefont}{\rmfamily\mdseries\upshape} % No bold!
+
+%%% END Article customizations
+
+%%% The "real" document content comes below...
+
+\title{CS132 Coursework 1}
+\author{Alen Buhanec}
+\date{}
+
+\makeatletter
+\renewcommand*\env@matrix[1][*\c@MaxMatrixCols c]{%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{#1}}
+\makeatother
+
+\begin{document}
+\maketitle
+\tableofcontents
+\chapter{Introduction}
+\chapter{Key Strategy Considerations}
+\chapter{Strategy Design}
+\chapter{Implementation}
+\chapter{Conclusion}
+\section*{Question 1}
+\begin{enumerate}[(a)]
+	\item The truth table is show in \cref{t:q1}.
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{ c c c | c c c c c c c c }
+		$A2$ & $A1$ & $A0$ & $D7$ & $D6$ & $D5$ & $D4$ & $D3$ & $D2$ & $D1$ & $D0$ \\
+		\hline
+		\textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} \\
+		\textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} \\
+		\textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} \\
+		\textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} \\
+		\textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} \\
+		\textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} \\
+		\textcolor{darkBlue}{\textbf{1}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} \\
+		\textcolor{darkBlue}{\textbf{1}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{darkBlue}{\textbf{1}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} & \textcolor{gray}{\textbf{0}} \\
+	\end{tabular}
+	\caption{Truth table for a 3-to-8 active high decoder}.
+	\label{t:q1}
+\end{table}
+\item As we can see in \cref{t:q1}, each row corresponds to one and only one of the outputs being active. Therefore we can rewrite each row as an expression for the condition of that output being active.
+\begin{subequations}
+\begin{align*}
+        D0 &= \textcolor{gray}{\overline{A2}} \cdot \textcolor{gray}{\overline{A1}} \cdot \textcolor{gray}{\overline{A0}} \\
+        D1 &= \textcolor{gray}{\overline{A2}} \cdot \textcolor{gray}{\overline{A1}} \cdot {A0} \\
+        D2 &= \textcolor{gray}{\overline{A2}} \cdot {A1}\cdot \textcolor{gray}{\overline{A0}} \\
+        D3 &= \textcolor{gray}{\overline{A2}} \cdot {A1}\cdot {A0} \\
+        D4 &= {A2}\cdot \textcolor{gray}{\overline{A1}} \cdot \textcolor{gray}{\overline{A0}} \\
+        D5 &= {A2}\cdot \textcolor{gray}{\overline{A1}} \cdot {A0} \\
+        D6 &= {A2}\cdot {A1}\cdot \textcolor{gray}{\overline{A0}} \\
+        D7 &= {A2}\cdot {A1}\cdot {A0}
+\end{align*}
+\end{subequations}
+\label{i:q1}
+\item The design can be seen in \cref{a:q1} and was reached with the following through process:
+\begin{enumerate}[(i)]
+	\item Each of the outputs must accept input from all three inputs
+	\item According to \cref{i:q1} these inputs must go through a triple input AND gate (a triple input AND gate can be constructed from two double input AND gates, with one of the gates running its output to the other's input, and the remaining three inputs being used as a substitute for the triple input AND input and the remaning output being used as the triple AND output)
+	\item 6 input lines should run along the 8 outputs, each line being either an active high or active low for one of the 3 inputs, with each input having one active high and one active low line
+	\item These 6 input lines should connect to the AND gates of the ouputs where appropriate, making sure each input only connects to an output once, regardless of which line is being used
+	\item This design can be tested by checking where the three inputs of every ouput lead, and verify the correctness with a given truth table or set of expressions
+	\item Alternatively, if the circuit is assembled, we can think of the three inputs of a 3 digit binary number and go from 0 to 7, checking if the corresponding $Dx$ output will be enabled, where $x$ is the number inputted. Furthermore since we have 8 possible combinations with 8 possible outputs, we should never encouter a duplicate output. We can also run the output into a 8-to-3 encoder, and we should get our initial input back
+\end{enumerate}
+\end{enumerate}
+\section*{Question 2}
+\begin{enumerate}[(a)]
+	\item The design can be found in \cref{a:q2}. The rectangular components are simplified representations of D-type flip-flops. For clarity's sake I will refer to the flip-flop with output $O_1$ as the first flip-flop and $O_4$ as the last flip-flop.
+	\item We need to assume that the circuit is constantly powered on during operation, otherwise flip-flops lose their states. Additionally we need to assume that the flip-flops are all clocked in a synchronised fashion, since once the flip-flops update the inputs to the flip-flops may change.
+
+	The core of the design rests on the combination of two AND gates leading into an OR gate connected to the input of a flip-flop. Each instance of this ``combination'' has one AND gate connected with one input to the active high line of the $I_{dir}$ input, and the other AND gate connected with one input to the active low line of the $I_{dir}$ input. This allows the design to toggle between the remaining inputs of the two AND gates as the input sent to the flip-flop through the OR gate.
+	
+	The instances of the ``combination'' have their remaining inputs (the ones being toggled between by $I_{dir}$) connected to the next or previous flip-flop ouput, where possible. Since the first flip-flop has no previous one, the input used instead is the input $I_D$. Likewise the last flip-flop has no next flip-flop, so the input $I_D$ is used in its place. Furthermore, since there is no previous or next flip-flop for the outputs of the first or last flip-flop to be led to in some cases, the output is led to $O_D$ using the same ``combination'' to decide between using the output of the first or last flip-flop. Note that due to the layout of the circuit, the AND gates of the $O_D$ ``combination'' have their positions inverted compared to the rest of the circuit.
+	
+	To make sure the shifting is performed consistently across the entire register, the $I_dir$ active high line connects to the AND gate with the previous flip-flop's output as its input, and the active low line connects to the AND gate with the next flip-flop's output as its input (substituting $I_D$ and $O_D$ where applicable for the first and last flip-flop).
+	\newpage
+	To more clearly illustrate the design, a few consecutive steps will be explained, given the initial state of ``1 0 1 0'' for ``$D_1\ D_2\ D_3\ D_4$''. The expressions used to determine the input to flip-flops when performing these steps is the following, where $D_x$ is flip-flop $x$'s input and $Q_x$ is $x$'s output. The expression for $O_D$ is repeated twice too, to clarify the ``shifting'' overflow leading to the output: \\
+	\[ O_D = D_4\cdot I_{dir} + Q_1\cdot \overline{I_{dir}} \]
+	\[ D_1 = I_D\cdot I_{dir} + Q_2\cdot \overline{I_{dir}} \]
+	\[ D_2 = D_1\cdot I_{dir} + Q_3\cdot \overline{I_{dir}} \]
+	\[ D_3 = D_2\cdot I_{dir} + Q_4\cdot \overline{I_{dir}} \]
+	\[ D_4 = D_3\cdot I_{dir} + I_D\cdot \overline{I_{dir}} \]
+	\[ O_D = D_4\cdot I_{dir} + Q_1\cdot \overline{I_{dir}} \]
+	\begin{enumerate}
+		\item Shifting downwards (position increasing) with input 0\begin{enumerate}
+			\item $I_D$ is set to 0 (input 0) and $I_{dir}$ is set to 1 (position increasing)\begin{itemize}
+				\item The inputs for flip-flops 1-4 are now ``0 1 0 1''
+				\item The input for the $O_D$ flip flop is ``0''
+			\end{itemize}
+			\item clock changes state, updating the flip-flops\begin{itemize}
+				\item The flip-flops are now set to ``0 1 0 1'', output is ``0''
+				\item Essentially what happened was: \[ \textcolor{red}{0}\ (I_D)\rightarrow 1\ 0\ 1\ \textcolor{darkBlue}{0}\ \rightarrow O_D \xrightarrow{\text{clock state change}} I_D \rightarrow \textcolor{red}{0}\ 1\ 0\ 1\rightarrow \textcolor{darkBlue}{0}\ (O_D) \]
+			\end{itemize}
+		\end{enumerate}
+		\item Shifting downwards (position increasing) with input 1\begin{enumerate}
+			\item $I_D$ is set to 1 (input 1) and $I_{dir}$ is set to 1 (position increasing)\begin{itemize}
+				\item The inputs for flip-flops 1-4 are now ``1 0 1 0''
+				\item The input for the $O_D$ flip flop is ``1''
+			\end{itemize}
+			\item clock changes state, updating the flip-flops\begin{itemize}
+				\item The flip-flops are now set to ``1 0 1 0'', outpit is ``1''
+				\item Essentially what happened was: \[ \textcolor{red}{1}\ (I_D)\rightarrow 0\ 1\ 0\ \textcolor{darkBlue}{1}\ \rightarrow O_D \xrightarrow{\text{clock state change}} I_D \rightarrow \textcolor{red}{1}\ 0\ 1\ 0\rightarrow \textcolor{darkBlue}{1}\ (O_D) \]
+			\end{itemize}
+		\end{enumerate}
+		\item Shifting upwards (position decreasing) with input 1\begin{enumerate}
+			\item $I_D$ is set to 0 (input 0) and $I_{dir}$ is set to 0 (position decreasing)\begin{itemize}
+				\item The inputs for flip-flops 1-4 are now ``0 1 0 1''
+				\item The input for the $O_D$ flip flop is ``1''
+			\end{itemize}
+			\item clock changes state, updating the flip-flops\begin{itemize}
+				\item The flip-flops are now set to ``0 1 0 1'', output is ``1''
+				\item Essentially what happened was: \[ O_D\leftarrow \textcolor{darkBlue}{1}\ 0\ 1\ 0\ \leftarrow \textcolor{red}{1}\ (I_D) \xrightarrow{\text{clock state change}}  \textcolor{darkBlue}{1}\ (O_D)\leftarrow 0\ 1\ 0\ \textcolor{red}{1}\leftarrow I_D \]
+			\end{itemize}
+		\end{enumerate}
+	\end{enumerate}
+\end{enumerate}
+\section*{Question 3}
+\begin{enumerate}[(a)]
+	\item The function can be found in \cref{a:q3}, and is defined as the C function \\ \texttt{\footnotesize \textbf{\textcolor{darkBlue}{int}}~binomialCoefficient\textcolor{red}{(}\textbf{\textcolor{darkBlue}{int}}~n\textcolor{red}{,}~\textbf{\textcolor{darkBlue}{int}}~r\textcolor{red}{)}}. It accepts two integers as arguments and ouputs the resulting integer. As it works recursively I defined some termination cases where the binomial coefficient always takes a specific value. The function that draws a row of Pascal's triangle based on this function is defined as \texttt{\footnotesize \textbf{\textcolor{darkBlue}{void}}~drawPascalsRow\textcolor{red}{(}\textbf{\textcolor{darkBlue}{int}}~n\textcolor{red}{)}} and accepts the row number as an argument.
+	\item The function is defined as \texttt{\footnotesize \textbf{\textcolor{darkBlue}{int}}~fibonacci\textcolor{red}{(}\textbf{\textcolor{darkBlue}{int}}~n\textcolor{red}{)}} and uses \texttt{\footnotesize binomialCoeficient}.
+	\item \begin{itemize}
+		\item Lines 1-4: I included the standard input/output library to output results and verify my functions. Lines 3 and 4 include forward declarations of functions, so that they can be used in \texttt{\footnotesize main} whilst being properly defined later.
+		\item \texttt{\footnotesize \textbf{\textcolor{darkBlue}{int}}~main\textcolor{red}{(}\textcolor{red}{)}} - this is going to get executed when the program runs, and contains calls to other functions to verify functionality of code. An example of using the functions is giving for parts (a) and (b). For part (a) I draw part of Pascal's triangle by using a for loop to draw rows 1-10, making sure to put each row in a new line by printing the newline and return carriage after each iteration. For part (b) I print out the first 10 Fibonacci in a similar manner. According to convention I return 0 at the end, indicating success (as opposed to $-1$, which would indicate failure).
+		\item \texttt{\footnotesize \textbf{\textcolor{darkBlue}{int}}~binomialCoefficient\textcolor{red}{(}\textbf{\textcolor{darkBlue}{int}}~n\textcolor{red}{,}~\textbf{\textcolor{darkBlue}{int}}~r\textcolor{red}{)}} - function corresponding to $n\choose r$. As the function was defined recursively, I had to define some cases where the recursion would terminate. These cases are covered by the first two if statements, returning 0 if $n<r\vee n<0 \vee r<0$ or returning 1 if $n=r \vee r=0$ where ${n \choose r} $. In the case that the recursion has not been terminated we call the same function, but with the second argument equal to $r-1$. We then multiply the returned value by $\frac{n+1-r}{r}$ as defined by the coursework.
+		\item \texttt{\footnotesize \textbf{\textcolor{darkBlue}{void}}~drawPascalsRow\textcolor{red}{(}\textbf{\textcolor{darkBlue}{int}}~n\textcolor{red}{)}} - we simply use a \texttt{\footnotesize for} loop to print out each element in the row, knowing that the element is defined as $\text{row number}-1 \choose \text{position in row}$, if the first position in a row is defined as 0. The function only requires one argument as we know that each row number corresponds to that row's number of elements.
+		\item \texttt{\footnotesize \textbf{\textcolor{darkBlue}{int}}~fibonacci\textcolor{red}{(}\textbf{\textcolor{darkBlue}{int}}~n\textcolor{red}{)}} - In this function we implement the mathematical sum as a \texttt{\footnotesize for} loop, using \texttt{\footnotesize r} in place of \texttt{\footnotesize k}. Instead of flooring the final number of repetitions as written in the coursework (that thing above sigma), I simply used integers to perform the calculation, leading to the stripping of any decimals and effectively flooring the value for me already. Each time we go through the loop we add the calculated binomial coefficient to a sum storing variable that was initially 0, and then after we are done looping we return this sum.
+	\end{itemize}
+\end{enumerate}
+\newpage
+\section*{Question 4}
+\begin{enumerate}[(a)]
+	\item The program can be found in \cref{a:q4a}.
+	\item The program can be found in \cref{a:q4b}.
+	\item \begin{enumerate}
+		\item \begin{enumerate}
+			\item Lines 2-3: we define the constants used in division
+			\item Lines 6-7: we allocate memory for the results in the main store
+			\item Lines 13-15: we set our data registers to their initial values, as labeled in the code - D0 is the divisor\footnote{We could use the \texttt{divisor} constant instead of a register throughout the program, but in anticipation of the follow up task, I implemented division using the data register instead}, D1 the quotient, D2 the dividend (which will become the remainder)
+			\item Lines 18-20: we increment the quotient and subtract the divisor from the dividend. Using \texttt{\footnotesize bgt} we repeat this loop until we hit 0 or a negative number.
+			\item Lines 21-23: we check if we hit exactly 0 by using \texttt{\footnotesize beq}, and if so we jump over the logic for not hitting exactly 0. If we did not hit exactly 0 we ``step back'' our loop once in lines 18-20 by adding the divisor to the remainder and decrementing the quotient. This way we are left with the remainder and actual quotient.
+			\item Lines 26-27: we move the quotient and remainder to the memory we allocated in the main store
+		\end{enumerate}
+		\item \begin{enumerate} 
+			\item Line 2: we define the constant to check for primality
+			\item Line 5: we allocate memory for the result in the main store
+			\item Lines 10-11: we set our data registers to their initial values, as labeled in the code - D0 is the dividend, D1 the divisor
+			\item Lines 14-16: ``common'' code with task (a), we keep subtracting our divisor from the dividend until we reach 0 or a negative number. If we hit exactly 0 we jump to the end of the program and store the result in memory (which would be 0, or ``not prime''). This is because we successfully divided the numer without a remainder.
+			\item Lines 17-20: we increment divisor by 1 and move the constant dividend to D0. We then subtract the two and check if the result is 0. If it is we have reached the end of our program\footnote{We have checked every possible number up to the number itself, although inefficient this is a sure way to check all factors.} without finding a factor and we jump to line 25, which sets the value of D0 to ``prime'' (1).
+			\item Lines 21-22: we move the constant divident to D0 again since we subtracted the divisor just 2 lines before and then jump to the beginning of the division loop.
+			\item Line 25: the only way to reach this line is to jump to it from line 16, which happens on determining that the number is a prime. It sets the value of D1 to 1.
+			\item Line 28: stores the value of D1 to the memory allocated in the main store. D1 should either be ``prime'' (1) or ``not prime'' (0)
+		\end{enumerate}
+	\end{enumerate}
+\end{enumerate}
+\appendix
+\newpage
+\section{3-To-8 Decoder}
+\label{a:q1}
+\begin{figure}[htbp]
+  \centering
+  %\includegraphics[width=0.5\textwidth]{3-to-8-decoder.png}
+  \label{g:3-to-8-double}
+  \caption{A 3-to-8 active high decoder}
+\end{figure}
+\newpage
+\section{4-bit Bidirectional Shift Register}
+\label{a:q2}
+\begin{figure}[htbp]
+  \centering
+  %\includegraphics[width=0.8\textwidth]{4-bit-bidirectional-shift-register.png}
+  \label{g:4-bit-register}
+  \caption{A 4-bit bidirectional shift register with input $I_D$, output $O_D$, direction control $I_dir$ and bit status indicators $O_1$ to $O_4$}
+\end{figure}
+
+\newpage
+\section{C Functions Relating to Pascal's Triangle}
+\label{a:q3}
+\lstset{
+literate=	{;}{{\textcolor{red}{;}}}1
+		{,}{{\textcolor{red}{,}}}1
+		{<}{{\textcolor{red}{<}}}1
+		{>}{{\textcolor{red}{>}}}1
+		{[}{{\textcolor{red}{[}}}1
+		{]}{{\textcolor{red}{]}}}1
+		{(}{{\textcolor{red}{(}}}1
+		{esc)}{{\textcolor{red}{)}}}1
+		{|}{{\textcolor{red}{|}}}1
+		{esc/}{{\textcolor{red}{/}}}1
+		{+}{{\textcolor{red}{+}}}1
+		{-}{{\textcolor{red}{-}}}1
+		{=}{{\textcolor{red}{=}}}1
+		{1}{{\textcolor{orange}{1}}}1
+		{2}{{\textcolor{orange}{2}}}1
+		{3}{{\textcolor{orange}{3}}}1
+		{4}{{\textcolor{orange}{4}}}1
+		{5}{{\textcolor{orange}{5}}}1
+		{6}{{\textcolor{orange}{6}}}1
+		{7}{{\textcolor{orange}{7}}}1
+		{8}{{\textcolor{orange}{8}}}1
+		{9}{{\textcolor{orange}{9}}}1
+		{0}{{\textcolor{orange}{0}}}1
+		{\#include\ }{{\textcolor{brownIsh}{\#include }}}9
+		{<stdio.h>}{{\textcolor{brownIsh}{<stdio.h>}}}9
+}
+\lstset{language={C}}
+%\lstinputlisting{cs132.c}
+\newpage
+\section{MicSim Division}
+\label{a:q4a}
+\lstdefinelanguage{MicSim}
+{
+	keywords={dc,ds,move,inc,sub,add,bgt,beq,dec,jmp},
+	sensitive=false,
+	alsoletter={\$},
+	comment=[l]{\|},
+}
+\lstset{
+	literate=,
+	literate=	{1}{{\textcolor{orange}{1}}}1
+		{2}{{\textcolor{orange}{2}}}1
+		{3}{{\textcolor{orange}{3}}}1
+		{4}{{\textcolor{orange}{4}}}1
+		{5}{{\textcolor{orange}{5}}}1
+		{6}{{\textcolor{orange}{6}}}1
+		{7}{{\textcolor{orange}{7}}}1
+		{8}{{\textcolor{orange}{8}}}1
+		{9}{{\textcolor{orange}{9}}}1
+		{0}{{\textcolor{orange}{0}}}1
+		{\#}{{\textcolor{orange}{\#}}}1
+		{D0}{{\textcolor{orange}{D0}}}2
+		{D1}{{\textcolor{orange}{D1}}}2
+		{D2}{{\textcolor{orange}{D2}}}2
+		{D3}{{\textcolor{orange}{D3}}}2
+		{cD0}{{\textcolor{darkGreen}{D0}}}2
+		{cD1}{{\textcolor{darkGreen}{D1}}}2
+		{cD2}{{\textcolor{darkGreen}{D2}}}2
+		{cD3}{{\textcolor{darkGreen}{D3}}}2,
+	language={MicSim},			% the language of the code
+	deletekeywords={},				% delete key words from language
+	morekeywords={},				% if you want to add more keywords to the set
+}
+%\lstinputlisting{cs132a.asm}
+\newpage
+\section{MicSim Primality Test}
+\label{a:q4b}
+%\lstinputlisting{cs132b.asm}
+\end{document}
