@@ -8,7 +8,8 @@ public class Snapshot extends VectorPoint {
     protected final long time;
 
     Snapshot(ScannedRobotEvent e, Robot r) {
-        super(Utility.vectorAdd(r.getX(), r.getY(), e.getBearingRadians(),
+        super(Utility.vectorAdd(r.getX(), r.getY(),
+                                Utility.fixAngle(Math.toRadians(r.getHeading()) + e.getBearingRadians()),
                                 e.getDistance()),
               e.getHeadingRadians(),
               e.getVelocity());
@@ -48,6 +49,6 @@ public class Snapshot extends VectorPoint {
     }
 
     public String toString() {
-        return name + " at " + time;
+        return name+" " +"("+Math.round(x)+","+Math.round(y)+") bearing "+Math.round(Math.toDegrees(heading))+" going "+Math.round(speed) + " at " + time;
     }
 }

@@ -35,7 +35,7 @@ public class DirectedPoint extends Point {
     }
 
     public double getBearingTo(double x, double y) {
-        return Utility.fixAngle(getNorthBearingTo(x, y)+getHeading());
+        return Utility.fixAngle(getNorthBearingTo(x, y)-getHeading());
     }
 
     public double getRelativeBearingTo(DirectedPoint point) {

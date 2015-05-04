@@ -4,7 +4,7 @@ import robocode.*;
 import java.util.*;
 import robocode.util.Utils;
 
-public class SurfPilot extends AdvancedRobot {
+public class SurfPilot implements Pilot {
     protected static int BINS = 47;
     protected static double WALL_STICK = 160;
     protected static double WALL_STICK_PERCENT = 0.25;
@@ -50,7 +50,6 @@ public class SurfPilot extends AdvancedRobot {
 
     // courtesy of wiki tutorial
     public void onScannedRobot(ScannedRobotEvent e) {
-        System.out.println("[Surfer] ON SCANNED ROBOT");
         // check if we scanned the right robot
         Snapshot current;
         if (e.getName().equals(target)) {
@@ -68,10 +67,9 @@ public class SurfPilot extends AdvancedRobot {
         bearings.add(0, northBearing);
         // calculate bullet information
         if (previous != null) {
-            System.out.println("[Surfer] HEY THERE");
             double bulletEnergy = previous.getEnergy()-current.getEnergy();
             if (Utility.containedii(bulletEnergy, Rules.MIN_BULLET_POWER-0.0001, Rules.MAX_BULLET_POWER+0.0001) && directions.size() > 2) {
-                System.out.println("[Surfer] Wave detected");
+                //System.out.println("[Surfer] Wave detected");
                 long bulletTime, bulletMinTime, bulletMaxTime;
                 Wave min, avg, max;
                 if (current.getTime()-previous.getTime() > 1) {
@@ -253,10 +251,13 @@ public class SurfPilot extends AdvancedRobot {
     }
 
     public void surf() {
-        System.out.println("[Surfer] surfing");
+        //System.out.println("[Surfer] surfing");
         Wave wave = getWave();
         DirectedPoint self = state.getSelf();
-        double angle = wallSmoothing(self, self.getHeading(), (random.nextBoolean() ? -1 : 1));
+        //System.out.println(state);
+        int dir = (random.nextBoolean() ? -1 : 1);
+        double heading = self.getHeading();
+        double angle = wallSmoothing(self, heading, dir);
         double emergency = 0;
         if (wave != null) {
             angle = wave.getNorthBearingTo(self);
@@ -268,12 +269,12 @@ public class SurfPilot extends AdvancedRobot {
                 angle = wallSmoothing(self, angle, 1);
             }
             emergency = self.distanceTo(wave)/wave.getSpeed();
-            System.out.println("[Surf] Emergency: "+emergency);
-            System.out.println("[Surf] Angle: "+Math.toDegrees(angle));
+            //System.out.println("[Surf] Emergency: "+emergency);
+            //System.out.println("[Surf] Angle: "+Math.toDegrees(angle));
         }
 
         if (emergency > WAVE_MOVE_THRESHOLD) {
-            System.out.println(emergency);
+            //System.out.println(emergency);
             simple(angle);
         }
     }

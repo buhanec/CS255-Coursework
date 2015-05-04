@@ -29,10 +29,6 @@ public class MyRobot extends Robot
 
 
 	public void run() {
-		// Static vars for inter run
-		State state = MyRobot.state;
-		SurfPilot surfer = MyRobot.surfer;
-
 		// avoid turning gun with robot
 		setAdjustGunForRobotTurn(true);
 
@@ -49,6 +45,7 @@ public class MyRobot extends Robot
 		// radar
 		radar = new Radar(this, state);
 		lastTarget = false;
+		String gunTarget = null;
 		// movement
 		surfer = new SurfPilot(this, state, arena);
 		//whitehole = new WhiteHole(this, state, arena);
@@ -64,10 +61,11 @@ public class MyRobot extends Robot
 				previousEnergy = getEnergy();
 				System.out.println("------ Calculations -----");
 				// Calculations
-				System.out.println(state);
+				//System.out.println(state);
 				if (state.getRemaining() == 1 && !lastTarget && state.getAlive().size() > 1) {
 					for (String target : state.getAlive()) {
 						if (!target.equals(getName())) {
+							gunTarget = target;
 							radar.setTarget(target);
 							surfer.setTarget(target);
 							lastTarget = true;
@@ -80,10 +78,16 @@ public class MyRobot extends Robot
 				surfer.update(getTime());
 				System.out.println("------- Operations ------");
 				// Operations - should block here
-				surfer.move();
+				//surfer.move();
 				state.update(getTime()+1);
+				System.out.println("---------- Scan ---------");
 				radar.scan();
-				radar.gunLinear(null);
+				//System.out.println("---------- Fire ---------");
+				//if (state.getSnapshot(gunTarget) != null) {
+				//	if (radar.isFiring() || (state.getSnapshot(gunTarget).getTime() > getTime()-2)) {
+				//		radar.gunSimple(gunTarget);
+				//	}
+				//}
 			} else {
 				doNothing();
 			}
@@ -91,27 +95,30 @@ public class MyRobot extends Robot
 	}
 
 	public void onStatus(StatusEvent e)  {
+		//System.out.println("[onstatus]");
 		if (state != null) {
 			Snapshot snap = new Snapshot(getName(), e.getStatus());
 			state.addSnapshot(snap);
-			System.out.println("[State] Added "+snap.name+" snapshot.");
+			state.addSelf(snap);
 		}
 	}
 
 	public void onScannedRobot(ScannedRobotEvent e) {
 		Snapshot snap = new Snapshot(e, this);
-		System.out.println(snap);
+		//System.out.println(snap);
 		state.addSnapshot(snap);
 		radar.onScannedRobot(e);
 		surfer.onScannedRobot(e);
 		// take potshot
-		if (getEnergy() > 10 && radar.isFiring()) {
+		/*
+		if (getEnergy() > 10 && !radar.isFiring()) {
 			System.out.println("[Scanning] potshot");
 			if (getGunHeat() == 0) {
-				double bulletPower = Utility.constrain(500/state.getSelf().distanceTo(snap), Rules.MIN_BULLET_POWER, Rules.MAX_BULLET_POWER);
+				double bulletPower = Utility.constrain(3*500/state.getSelf().distanceTo(snap), Rules.MIN_BULLET_POWER, Rules.MAX_BULLET_POWER);
 				fireBullet(bulletPower);
 			}
 		}
+		*/
 	}
 
 	public void onHitByBullet(HitByBulletEvent e) {
