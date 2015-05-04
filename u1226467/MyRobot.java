@@ -40,7 +40,7 @@ public class MyRobot extends Robot
 		// state
 		previousTime = -1;
 		previousEnergy = getEnergy();
-		state = new State(getOthers() + 1);
+		state = new State(getName(), getOthers() + 1);
 		System.out.println("[State] Initialised for " + (getOthers() + 1));
 		Snapshot snap = new Snapshot(this);
 		state.addSnapshot(snap);
@@ -110,7 +110,6 @@ public class MyRobot extends Robot
 		if (state != null) {
 			Snapshot snap = new Snapshot(getName(), e.getStatus());
 			state.addSnapshot(snap);
-			state.addSelf(snap);
 		}
 	}
 

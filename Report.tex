@@ -105,7 +105,7 @@
 \begin{document}
 \maketitle
 \tableofcontents
-\chapter{Introduction} % 200 words
+\chapter{Introduction} % 200 words % mention no restriction on complexity, restriction on time somewhere
 With competition being a central component of the Robocode environment, it presents a very interesting platform for developing an AI. Given some core AI knowledge and a reasonable understanding of Java, the primary language used to develop Robocode robot tanks, as the AIs are called, anyone can attempt to create their own.
 
 The aim of this coursework was to create a robot tank design for the Robocode environment, with the main objective being to be able to perform in a wide range of scenarios, such as both in melee combat (more than two robots) and one-to-one combat with just two robots and in battlefields of various sizes. The robot tank was to be based on the basic \texttt{Robot} class and not the more sophisticated \texttt{AdvancedRobot} class. While the environment may seem real-time, it is actually turn-based with robots taking simultaneous turns. %mention performance
@@ -115,6 +115,27 @@ This report presents the design of the robot tank submitted and its individual c
 A detailed explanations of individual component is given, and the reasoning behind those components is explained. Notes on implementation details are also given to aid understanding of the submitted code.
 
 Finally the chosen designs are compared between themselves and to other existing designs, and future expansion and improvements are outlined and suggested.
+
+\section{Glossary}
+MyRobot
+tick
+melee
+one-on-one
+radar
+scanning
+gun
+tank
+pilot
+blocking function
+non blocking function
+battlefield
+surfing
+anti-gravity
+Radar
+State
+potshot
+
+\section{Basic Robocode Mechanics}
 
 \chapter{Key Strategy Considerations} % 400 words
 
@@ -152,7 +173,7 @@ This chapter discusses and justifies the designs used.
 Due to the vast number of factors that have to be considered for a genetic algorithm, and similarly the vast number for cases that would have to be considered for an advanced rule-based system, in essence the design approached a plan-based system.
 
 \section{Structure and Main Components}
-The main code within \texttt{Robot.java} performs two main tasks.
+The main code within \texttt{MyRobot.java} performs two main tasks.
 
 Firstly it contains all the event handling, which is either passed on to relevant components to increase their knowledge of the battlefield, or causes an interrupt to perform emergency operations (such as distancing from walls, handling being crashed into, handling unplanned ramming).
 
@@ -167,16 +188,62 @@ Usually the first goal is to scan until sufficient information is acquired to se
 
 As firing at a target simultaneously performs limited scanning, it can often happen that firing is performed several times in a row, with the cycle returning to scanning only after the limited scanning does not produce sufficient information.
 
-Moving is performed on a timed basis or triggered by getting hit. Data is collected from both being hit and hitting opponents in order to aid target selection and movement rules.
+Moving is performed on a timed basis. The reasoning behind this is that given the limited scanning available to robot, both because of a potential melee environment and the restrictions of the \texttt{Robot} class, pre-emptively dodging shots is nearly impossible and more often than not a waste of turns that could be used for scanning and firing at the opponents.
+
+The two pilots have different methods to determine where to move, with the Surfing Pilot being designed to avoiding incoming shots and the Anti-Gravity Pilot being designed to reposition the robot closer to robots it can prey on and further from robots that prey on the robot.
+
+Since most robots are expected to use no gun tracking or track linear projections, additional movement is performed when the robot is hit. Getting hit usually indicates the robot is being targeted and movement causes any shots fired after the first to hit to most likely miss, as both no tracking and linear tracking would predict a stationary robot. While moving, if still targeted, acceleration and deceleration make the robot harder to hit. This repositioning is performed by the Anti-Gravity Pilot and repositions the robot to a statistically better position.
+
+Data is collected from both being hit and hitting opponents in order to aid target selection and movement rules. Additionally data is constantly being collected by the scanner.
+
+\section{State}
+Most of the data relating to a given instance of a Robocode game is stored in the \texttt{State} class. This class stores snapshots of robots for a certain period of time, as well as additional information regarding their threat level.
+
+Snapshots are instances of the \texttt{Snapshot} class and contain information of a robot at a certain point in time - information on his location, heading, speed etc. As \texttt{Snapshot} extends \texttt{VectorPoint}, snapshots can be projected over time and used to determine inter-robot bearings, distances etc.
 
 \section{Radar}
+A staple of any robot is the radar, as it is the primary source of information of the battlefield.
 
+The Radar component of the designed robot is designed with several key qualities in mind, including:
+\begin{itemize}
+    \item incremental execution of actions % not executing more than one tick at a time
+    \item optimal scan patterns of known robots % arc scanning
+    \item scanning with gun or radar rotations % being able to toggle between the two
+    \item coping with external influences % being able to recover from external gun rotations etc
+\end{itemize}
+
+\subsection{Incremental Execution}
+The importance of incremental execution is to approach the non-blocking model as much as possible by allowing actions to be changed or overruled. By carefully tracking rotations and target angles, the Radar is able to get interrupted after any number of ticks and resume any number of ticks after the interruption. The strength of this design is in the ability to interleave actions into the scanning, or to interleave scanning into other actions.
+
+Furthermore, in case the situation changes and scanning is no longer required it can be stopped at any time using incremental execution. With a non-incremental execution situational changes would have to checked on every information gathering event, whereas with this design situational changes are only calculate once a tick and conserve computational power.
+
+\subsection{Optimal Scan Patterns}
+Looking at several other simple \texttt{Robot}-based implementations, scans are usually performed without consideration of known robot locations. This is suboptimal, as the scan could be checking regions of the battlefield which are known to be empty.
+
+In order to avoid unnecessary ticks being wasted on scanning, optimal scan patterns are used to reduce the amount of scanning performed. At its very core, the Radar provides two scanning methods that can be employed with various parameters to achieve a variety of results:
+\begin{itemize}
+    \item 360 degree scanning
+    \item oscillation scanning
+\end{itemize}
+
+Despite being mentioned as suboptimal, 360 degree scans are sometimes necessary in order to check for new robots, or to recover after losing sight of robots. However due to the incremental execution of the radar, 360 degree scans can be quickly reduced to oscillation scans when enough data has been gathered.
+
+Oscillation scans are much more sophisticated and rely on the \texttt{State} to determine the smallest arc that would scan all the enemy robots. Using this arc, and some additional padding for safety measures, the scan now oscillates between the targets. Additional checks are performed to prevent unnecessary additional movement if all the targets have been scanned, and as long as the oscillation scan results in complete knowledge of the battlefield it will be the primary method of scanning.
+
+Oscillation scans occasionally get replaced by 360 degree scans if the arc angle is too large, or of the battlefield information is not complete and information on robots not scanned recently is too old.
 
 \section{Gun}
+While initial design decisions leaned towards separating the gun component in a similar fashion to the movement or radar, due to the previously mentioned constraints of the \texttt{Robot} class, ticks are conserved by opting to merge the gun into the radar and use gun rotation to perform scanning. While the radar is capable of performing scanning using either the gun or the radar, and even has groundwork done to potentially accommodate simultaneous \texttt{AdvancedRobot} movement, this method was mainly chosen for two reasons.
+
+Firstly, the approximate 45\% slowdown of the angular velocity of scanning is counter-balanced by ticks saved both for adjusting the gun to a potential firing angle, which is in most cases very close to the angle of the radar, and ticks required for improving target projections. As the gun rotation begins adjusting for the projected target movement, the radar will continuously scan the target being tracked, providing the most accurate projections.
+
+Secondly, as a lot of the robot designs will most likely be stationary for a considerable amount of time, having the gun locked to the radar allows for the main robot class to fire potshots on the scanned robot event handler. In order to not overheat the gun or interfere with tracked targeting and firing, a check is performed to make sure only scanning is being performed when the potshot opportunity arises. This is due to the gun facing the scanned robot at the time of the event. Since firing does not block movement, this essentially provides a ``free'' potshot at a potentially static target, at the cost of a minimal amount of energy.
+
 \section{Surfing Pilot}
 \section{Anti-Gravity Pilot}
 
 \chapter{Implementation} % 500 words
+\section{Supporting Classes}
 \section{Main Robot}
 \section{Radar}
 \section{Gun}

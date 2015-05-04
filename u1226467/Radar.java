@@ -12,7 +12,7 @@ public class Radar {
     protected static int    RADAR_45    = 3;
     protected static int    RADAR_SWEEP = 4;
     protected static int    RADAR_GUN   = 5;
-    protected static int    AGE_180     = 8;
+    protected static int    AGE_180     = 18;
     protected static int    NUM_180     = 2;
     protected static int    AGE_45      = 4;
     protected static double EXTRA_180   = 0.5;
@@ -220,6 +220,10 @@ public class Radar {
         System.out.println("[Radar] doOscillate");
         setRadar(type);
         names = state.getScannedNames(age);
+        System.out.println("Looking for: ");
+        for (String name : names) {
+            System.out.println(name);
+        }
 
         double angles[] = state.getArc();
         System.out.println("  [Radar] Raw angles: "+Math.round(Math.toDegrees(angles[0]))+"-"+Math.round(Math.toDegrees(angles[1])));
