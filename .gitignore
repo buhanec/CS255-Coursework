@@ -1,5 +1,6 @@
 # IDEA
 .idea/
+*.iml
 
 # Latex
 *.aux
@@ -15,6 +16,7 @@
 *.bcf
 *.dvi
 *.idx
+*.pdf
 
 # Java class
 *.class
