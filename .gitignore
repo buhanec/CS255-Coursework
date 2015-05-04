@@ -1,6 +1,21 @@
 # IDEA
 .idea/
 
+# Latex
+*.aux
+*.bbl
+*.blg
+*-blx.bib
+*.log
+*.run.xml
+*.synctex.gz
+*.toc
+*.out
+*.tex.bak
+*.bcf
+*.dvi
+*.idx
+
 # Java class
 *.class
 

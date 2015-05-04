@@ -91,12 +91,12 @@ public class MyRobot extends Robot
 				hole.update(getTime());
 				System.out.println("--------- Radar ---------");
 				// Operations - should block here
-				//surfer.move();
-				state.update(getTime()+1);
 				if (target != null && getGunHeat() == 0) {
+					state.update(getTime()+1);
 					radar.gunSimple(target);
 				} else {
 					radar.setStrategy();
+					state.update(getTime()+1);
 					radar.scan();
 				}
 			} else {
@@ -138,8 +138,7 @@ public class MyRobot extends Robot
 
 	// Should not happen under normal circumstances
 	public void onHitWall(HitWallEvent e) {
-		System.out.println("[onHitWall] Moving 180-100");
-		back(100);
+		System.out.println("[onHitWall]");
 	}
 
 	public void onHitRobot(HitRobotEvent e) {

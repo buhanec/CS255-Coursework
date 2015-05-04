@@ -1,5 +1,0 @@
-\contentsline {section}{\numberline {A}3-To-8 Decoder}{7}
-\contentsline {section}{\numberline {B}4-bit Bidirectional Shift Register}{8}
-\contentsline {section}{\numberline {C}C Functions Relating to Pascal's Triangle}{9}
-\contentsline {section}{\numberline {D}MicSim Division}{10}
-\contentsline {section}{\numberline {E}MicSim Primality Test}{11}
