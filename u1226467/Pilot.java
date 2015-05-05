@@ -1,6 +1,9 @@
 package u1226467;
 
-interface Pilot {
+import robocode.*;
+
+public interface Pilot {
     public void update(long time);
     public void move();
+    public void onHitByBullet(HitByBulletEvent e);
 }

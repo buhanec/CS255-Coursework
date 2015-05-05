@@ -4,15 +4,19 @@ import robocode.*;
 
 public class Utility {;
     public static Point vectorAdd(Point origin, double angle, double length) {
-        return new Point(origin.x + length * Math.sin(angle), origin.y + length * Math.cos(angle));
+        return new Point(origin.x + length * Math.sin(angle), origin.y
+                         + length * Math.cos(angle));
     }
 
-    public static Point vectorAdd(double x, double y, double angle, double length) {
-        return new Point(x + length * Math.sin(angle), y + length * Math.cos(angle));
+    public static Point vectorAdd(double x, double y, double angle,
+                                  double length) {
+        return new Point(x + length * Math.sin(angle), y + length
+                         * Math.cos(angle));
     }
 
     public static boolean validBullet(double power) {
-        return (power >= Rules.MIN_BULLET_POWER && power <= Rules.MAX_BULLET_POWER);
+        return (power >= Rules.MIN_BULLET_POWER
+                && power <= Rules.MAX_BULLET_POWER);
     }
 
     public static double constrain(double value, double min, double max) {
@@ -47,12 +51,13 @@ public class Utility {;
         return Utility.fixAngle(right - left);
     }
 
-    public static boolean isAngleBetween(double angle, double left, double right) {
+    public static boolean isAngleBetween(double angle, double left,
+                                         double right) {
         return (angleBetween(left, right) > angleBetween(angle, right));
     }
 
     public static double maxTurn(double speed) {
-        return Math.min(Rules.MAX_TURN_RATE_RADIANS, fixAngle(Math.PI/720d*(40d - 3d*Math.abs(speed))));
+        return Rules.getTurnRateRadians(Math.abs(speed));
     }
 
     public static double fixAngle(double angle) {

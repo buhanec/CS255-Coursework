@@ -175,7 +175,7 @@ public class MyRobot extends Robot
 		hole.reactive(true);
 	}
 
-	public void onHitRobot(HitRobotEvent e) {
+	public void onHitRobot2(HitRobotEvent e) {
 		DirectedPoint self = state.getSelf();
 		double limx, limy, distance;
 

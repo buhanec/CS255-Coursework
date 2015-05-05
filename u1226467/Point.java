@@ -79,12 +79,8 @@ public class Point {
                 return 0;
             }
         }
-        return Utility.fixAngle(-Utility.fixAngle(Math.atan2(dy, dx)-Math.PI/2));
-        //} else if (x > 0) {
-        //    return Utility.fixAngle(Math.PI/2 - Math.atan2(dy, dx));
-        //} else {
-        //    return Utility.fixAngle(Math.PI*2.5 - Math.atan2(dy, dx));
-        //}
+        return Utility.fixAngle(-Utility.fixAngle(Math.atan2(dy, dx)
+                                                  - Math.PI/2));
     }
 
     /**

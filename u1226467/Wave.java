@@ -6,7 +6,8 @@ public class Wave extends DirectedPoint {
     protected double direction;
     protected long time;
 
-    Wave(Point origin, double speed, double direction, double heading, long time) {
+    Wave(Point origin, double speed, double direction, double heading,
+         long time) {
         super(origin, heading);
         this.r = speed;
         this.speed = speed;
