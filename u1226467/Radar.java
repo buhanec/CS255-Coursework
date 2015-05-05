@@ -25,6 +25,7 @@ public class Radar {
 
     protected Robot robot;
     protected State state;
+    protected Rectangle arena;
     protected double heading;
     protected double gunHeading;
 
@@ -32,6 +33,7 @@ public class Radar {
     protected boolean firing;
     protected boolean justfired;
     protected boolean startFiring;
+    protected boolean losttarget;
 
     protected boolean radar360;
     protected boolean radar180;
@@ -52,15 +54,17 @@ public class Radar {
 
     protected int uniqueScanned;
 
-    Radar(Robot robot, State state) {
+    Radar(Robot robot, State state, Rectangle arena) {
         this.robot = robot;
         this.state = state;
+        this.arena = arena;
         heading = getRadarHeadingRadians();
         gunHeading = getGunHeadingRadians();
 
         mode = MODE_RADAR;
         firing = false;
         justfired = false;
+        losttarget = false;
         startFiring = false;
 
         radar360 = false;
@@ -83,6 +87,10 @@ public class Radar {
 
     public void reset() {
         mode = MODE_RADAR;
+        firing = false;
+        justfired = false;
+        losttarget = false;
+        startFiring = false;
 
         radar360 = false;
         radar180 = false;
@@ -117,6 +125,10 @@ public class Radar {
         target = name;
     }
 
+    public boolean lostTarget() {
+        return losttarget;
+    }
+
     public void setStrategy() {
         // Adjust radar in case something rotated it
         double turn = Utility.angleBetween(getRadarHeadingRadians(), heading);
@@ -133,17 +145,25 @@ public class Radar {
 
         // We are in a dueling environment
         if (state.getRemaining() == 1 && target != null) {
-            System.out.println("[Radar] target: "+target);
+            //System.out.println("[Radar] target: "+target);
             mode = MODE_GUN;
-            setGunToRadar();
-            for (String t : state.getScannedNames(AGE_45)) {
-                target = t;
+            if (Math.abs(getRadarHeadingRadians()- getGunHeadingRadians()) > 0.0001) {
+                setGunToRadar();
             }
+            //for (String t : state.getScannedNames(AGE_45)) {
+            //    target = t;
+            //}
             if (state.getScanned(AGE_45) == 1) {
-                System.out.println("[Radar] 45");
+                System.out.print("[Radar] 45: ");
+                for (String s : state.getScannedNames(AGE_45)) {
+                    System.out.print(s+" ");
+                }
+                System.out.println();
+                losttarget = false;
                 do45();
             } else {
                 System.out.println("[Radar] Regressing 45->360");
+                losttarget = true;
                 do360();
             }
         // We are in a melee environment
@@ -210,23 +230,24 @@ public class Radar {
     }
 
     protected void do360(int direction) {
-        System.out.println("[Radar] do360");
+        //System.out.println("[Radar] do360");
         setRadar(RADAR_360);
         angle = 2*Math.PI;
         this.direction = direction;
     }
 
     protected void doOscillate(int type, int age, double flat, double percent) {
-        System.out.println("[Radar] doOscillate");
+        //System.out.println("[Radar] doOscillate");
         setRadar(type);
         names = state.getScannedNames(age);
-        System.out.println("Looking for: ");
+        System.out.print("Looking for: ");
         for (String name : names) {
-            System.out.println(name);
+            System.out.print(name);
         }
+        System.out.println();
 
         double angles[] = state.getArc();
-        System.out.println("  [Radar] Raw angles: "+Math.round(Math.toDegrees(angles[0]))+"-"+Math.round(Math.toDegrees(angles[1])));
+        //System.out.println("  [Radar] Raw angles: "+Math.round(Math.toDegrees(angles[0]))+"-"+Math.round(Math.toDegrees(angles[1])));
         if (mode == MODE_RADAR) {
             angles[0] = Utility.fixAngle(angles[0] - getRadarHeadingRadians());
             angles[1] = Utility.fixAngle(angles[1] - getRadarHeadingRadians());
@@ -239,7 +260,7 @@ public class Radar {
         System.out.println("  [Radar] Arc size: "+Math.toDegrees(Utility.angleBetween(angles[0], angles[1])));
 
         if (Utility.angleBetween(angles[0], angles[1]) > (Math.PI)) {
-            System.out.println("[Radar] Unsuitable, regressing to 360");
+            //System.out.println("[Radar] Unsuitable, regressing to 360");
             do360();
         } else {
             if (!Utility.isAngleBetween(0, angles[0], angles[1])) {
@@ -264,8 +285,8 @@ public class Radar {
                 }
             }
         }
-        System.out.println("[Radar] First turn: "+direction*Math.toDegrees(angle));
-        System.out.println("[Radar] Second turn: "+direction2*Math.toDegrees(angle2));
+        //System.out.println("[Radar] First turn: "+direction*Math.toDegrees(angle));
+        //System.out.println("[Radar] Second turn: "+direction2*Math.toDegrees(angle2));
     }
 
     protected double pad(double radians, double flat, double percent) {
@@ -294,7 +315,7 @@ public class Radar {
     }
 
     public double turnGun(double angle, int direction) {
-        System.out.println("[Gun] turning gun "+Math.toDegrees(angle)*direction);
+        //System.out.println("[Gun] turning gun "+Math.toDegrees(angle)*direction);
         double degrees = Rules.GUN_TURN_RATE;
         // Get angle
         if (angle == 0) {
@@ -312,6 +333,7 @@ public class Radar {
             robot.setAdjustRadarForGunTurn(true);
         }
         // Turn the gun
+        //System.out.println("2: "+degrees+" ");
         if (direction == 1) {
             //System.out.println("  [Gun] turning right "+degrees);
             robot.turnGunRight(degrees);
@@ -327,10 +349,10 @@ public class Radar {
     public void scan() {
         double remaining;
         if (mode == MODE_RADAR) {
-            System.out.println("[Radar] Scanning with radar"+Math.toDegrees(angle));
+            //System.out.println("[Radar] Scanning with radar"+Math.toDegrees(angle));
             angle = turnRadar(angle, direction);
         } else {
-            System.out.println("[Radar] Scanning with gun: "+Math.toDegrees(angle));
+            //System.out.println("[Radar] Scanning with gun: "+Math.toDegrees(angle));
             angle = turnGun(angle, direction);
         }
         if (angle == 0) {
@@ -347,8 +369,8 @@ public class Radar {
         return firing;
     }
 
-    public Bullet gunSimple(String name) {
-        System.out.println("[SIMPLEGUN]");
+    public void gunSimple(String name) {
+        //System.out.println("[SIMPLEGUN]");
         Snapshot target = state.getSnapshot(name);
         Snapshot self = state.getSelf();
 
@@ -357,23 +379,32 @@ public class Radar {
         }
         if (target == self || target == null) {
             System.out.println("  [Gun] Null target");
-            return null;
+            return;
         }
-        System.out.println("  [Gun] Going for "+name);
+        //System.out.println("  [Gun] Going for "+name);
         firing = true;
 
         double currentAngle = getGunHeadingRadians();
-        System.out.println("  [Gun] Gun currently at "+Math.round(Math.toDegrees(currentAngle)));
+        //System.out.println("  [Gun] Gun currently at "+Math.round(Math.toDegrees(currentAngle)));
 
         double power = Utility.constrain(500/self.distanceTo(target), Rules.MIN_BULLET_POWER, Rules.MAX_BULLET_POWER);
+        // make it count
+        if (robot.getEnergy() > 30 && power < 1) {
+            power = 1;
+        }
         long time = (long) (self.distanceTo(target)/Rules.getBulletSpeed(power));
 
         VectorPoint projection = target.projectLinear(self.getTime()-target.getTime()+time);
-        System.out.println("  [Gun] Current target at "+target);
-        System.out.println("  [Gun] Projected target at "+projection);
+        //System.out.println("  [Gun] Current target at "+target);
+        //System.out.println("  [Gun] Projected target at "+projection);
+
+        if (!arena.contains(projection)) {
+            setStrategy();
+            scan();
+        }
 
         double targetAngle = self.getNorthBearingTo(projection);
-        System.out.println("  [Gun] Gun projected at "+Math.round(Math.toDegrees(targetAngle)));
+        //System.out.println("  [Gun] Gun projected at "+Math.round(Math.toDegrees(targetAngle)));
 
         if (working != RADAR_GUN) {
             setRadar(RADAR_GUN);
@@ -390,6 +421,7 @@ public class Radar {
 
         if (angle < Rules.GUN_TURN_RATE_RADIANS+0.0001) {
             double degrees = Math.min(Rules.GUN_TURN_RATE, Math.toDegrees(angle));
+            //System.out.println("1: "+degrees+" ");
             if (direction == 1) {
                 robot.turnGunRight(degrees);
             } else {
@@ -398,9 +430,15 @@ public class Radar {
             setRadar(RADAR_0);
             justfired = true;
             firing = false;
-            return robot.fireBullet(power);
+            state.addBullet(robot.fireBullet(power), name);
+        } else {
+            angle = angle - Rules.GUN_TURN_RATE_RADIANS;
+            if (direction == 1) {
+                robot.turnGunRight(Rules.GUN_TURN_RATE);
+            } else {
+                robot.turnGunLeft(Rules.GUN_TURN_RATE);
+            }
         }
-        return null;
     }
 
     public boolean shouldTurn(double radians, int direction) {
@@ -443,7 +481,7 @@ public class Radar {
             if (names.isEmpty() && working == RADAR_180) {
                 setRadar(RADAR_0);
             }
-            System.out.println("[Radar] scanned a target, "+names.size()+" remain");
+            //System.out.println("[Radar] scanned a target, "+names.size()+" remain");
         }
     }
 
@@ -468,7 +506,7 @@ public class Radar {
     }
 
     public void setGunToRadar() {
-        System.out.println("[Radar] setting gun to radar");
+        //System.out.println("[Radar] setting gun to radar");
         double radar = getRadarHeadingRadians();
         double gun = getGunHeadingRadians();
         //System.out.println("[Radar] "+Math.round(Math.toDegrees(gun))+"->"+Math.round(Math.toDegrees(radar)));

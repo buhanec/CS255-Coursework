@@ -5,11 +5,15 @@ import java.util.*;
 
 public class State {
     private Map<String, List<Snapshot>> history;
+    private Map<Bullet, String> bullets;
     private Set<String> alive;
     private Set<String> dead;
-    private Map<String, Integer> hit;
-    private Map<String, Integer> miss;
-    private Map<String, Integer> threat;
+    private Map<String, Double> hit;
+    private Map<String, Double> missed;
+    private Map<String, Double> threat;
+    private double totalThreat;
+
+    private SortedMap<Double, String> sorted;
 
     private String self;
     private int remaining;
@@ -22,8 +26,13 @@ public class State {
 
     State(String self, int robots, long time) {
         history = new HashMap<String, List<Snapshot>>();
+        bullets = new HashMap<Bullet, String>();
         alive = new HashSet<String>();
         dead = new HashSet<String>();
+        hit = new HashMap<String, Double>();
+        missed = new HashMap<String, Double>();
+        threat = new HashMap<String, Double>();
+        sorted = new TreeMap<Double, String>();
         remaining = robots;
         total = robots;
         this.time = time;
@@ -32,10 +41,14 @@ public class State {
 
     public void reset() {
         history = new HashMap<String, List<Snapshot>>();
+        bullets = new HashMap<Bullet, String>();
         alive.addAll(dead);
         dead.clear();
         remaining = total;
         time = 0;
+        for (String name : missed.keySet()) {
+            System.out.println(name+": "+hit.get(name)+"/"+missed.get(name));
+        }
     }
 
     public boolean isAlive(String name) {
@@ -56,6 +69,15 @@ public class State {
 
     public void update(long time) {
         this.time = time;
+        sorted.clear();
+        Set<Snapshot> latest = getLatestSnapshots();
+        for (Snapshot snapshot : latest) {
+            if (snapshot != null) {
+                String name = snapshot.getName();
+                double threat = threat(name);
+                sorted.put(threat, name);
+            }
+        }
     }
 
     public int getRemaining() {
@@ -131,6 +153,11 @@ public class State {
         } else {
             history.put(name, new ArrayList<Snapshot>());
             history.get(name).add(0, snapshot);
+        }
+        if (!hit.containsKey(name)) {
+            hit.put(name, 0D);
+            missed.put(name, 0D);
+            threat.put(name, 0D);
         }
     }
 
@@ -232,6 +259,48 @@ public class State {
             history.remove(name);
         }
         remaining--;
+    }
+
+    public void hit(Bullet bullet) {
+        String target = bullets.get(bullet);
+        double damage = Rules.getBulletDamage(bullet.getPower());
+        if (target != null) {
+            hit.put(target, hit.get(target) + damage);
+        }
+    }
+
+    public void miss(Bullet bullet) {
+        String target = bullets.get(bullet);
+        double damage = Rules.getBulletDamage(bullet.getPower());
+        if (target != null) {
+            missed.put(target, missed.get(target) + damage);
+        }
+    }
+
+    public void hitBy(Bullet bullet, String target) {
+        double damage = Rules.getBulletDamage(bullet.getPower());
+        threat.put(target, threat.get(target) + damage);
+        totalThreat = totalThreat + damage;
+    }
+
+    public void addBullet(Bullet bullet, String target) {
+        if (bullet != null) {
+            bullets.put(bullet, target);
+        }
+    }
+
+    // range from 0.5 - 4.5, usually under 2 for larger battles
+    public double threat(String target) {
+        double value = Math.log(threat.get(target)/(2*totalThreat)+1);
+        if (Double.isNaN(value)) {
+            value = 0;
+        }
+        double num = hit.get(target);
+        double rate = num / num + missed.get(target);
+        if (Double.isNaN(rate)) {
+            rate = 0;
+        }
+        return value * (1 - rate * 0.75) + 0.5;
     }
 
     public String toString() {

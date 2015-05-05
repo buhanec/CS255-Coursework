@@ -29,7 +29,7 @@
 
 % general stuff
 \usepackage[scaled=1.04]{couriers}
-\lstset{ 
+\lstset{
 	backgroundcolor=\color{white},		% background colour
 	basicstyle=\ttfamily\footnotesize,		% font style
 	breakatwhitespace=false,			% automatic breaks only at whitespace
@@ -105,6 +105,17 @@
 \begin{document}
 \maketitle
 \tableofcontents
+
+% polymorphism
+% avoidance, prediction, etc
+% check ibm masters
+% todo statistics
+
+\chapter{Preface}
+``A waste of fucking moves'' \newline\newline\indent\indent\indent\indent\indent -- Alen Buhanec, 2015\\ \\
+
+\noindent ``You should add that to your report''  \newline\newline\indent\indent\indent\indent\indent -- Piotr Brzozowski, 2015
+
 \chapter{Introduction} % 200 words % mention no restriction on complexity, restriction on time somewhere
 With competition being a central component of the Robocode environment, it presents a very interesting platform for developing an AI. Given some core AI knowledge and a reasonable understanding of Java, the primary language used to develop Robocode robot tanks, as the AIs are called, anyone can attempt to create their own.
 
@@ -239,8 +250,33 @@ Firstly, the approximate 45\% slowdown of the angular velocity of scanning is co
 
 Secondly, as a lot of the robot designs will most likely be stationary for a considerable amount of time, having the gun locked to the radar allows for the main robot class to fire potshots on the scanned robot event handler. In order to not overheat the gun or interfere with tracked targeting and firing, a check is performed to make sure only scanning is being performed when the potshot opportunity arises. This is due to the gun facing the scanned robot at the time of the event. Since firing does not block movement, this essentially provides a ``free'' potshot at a potentially static target, at the cost of a minimal amount of energy.
 
-\section{Surfing Pilot}
-\section{Anti-Gravity Pilot}
+\section{Surfing Pilot Movement}
+Surfing is a widely-adopted movement technique in the Robocode environment is has consistently appeared in the best performing \texttt{AdvancedRobot} robots in competitions.
+
+Since robots have no method of detected opponents' bullets until they have been hit, robots can monitor opponents' energy levels to determine when a shot has been fired. Once the shot has been fired a ``wave'' is created that represents the possible locations of the bullet. Using statistics to collect the ``danger'' level of different parts of the wave relative to the angle between the opponent and the robot, the robot can determine ideal locations on which to intercept the ``wave''. This movement method is called ``surfing'' and was attempted to be replicated by the \texttt{SurfPilot} class.
+
+The initial design of the robot would switch to this pilot when in a one-to-one battle if a melee battle ever came to the point of being a one-on-one battle.
+
+While the surfing pilot has several downsides, such as requiring constant scanning of the opponent and a lot of movement, it also guarantees some of the best evasive movement possible in the Robocode environment. Although ``surfing'' may seem predictable, in practice simulations to counter surfing are too complex to be performed and as such this was chosen as the design base for the one-to-one movement system.
+
+\section{Anti-Gravity Pilot Movement} % todo: fix
+Anti-gravity movement is a concept adopted by melee-oriented robots where positioning is more important and dodging a specific robot's shots less important. As such, unlike the one-to-one movement designs, it focuses more on being in statistically safer locations rather than predicting enemy shots.
+
+Anti-gravity movement works by using statistics of robot performance to determine the ``gravity'' of the battlefield. Different robots have different repulsive forces depending on their relative performance to the robot. These repulsive forces create ``anti-gravity'', hence the name of the design. Robots which tend to get hit a lot by the robot but not hit back are assigned a lower force, which robots that perform well and avoid many hits while hitting more of their own.
+
+Using these points, and potentially additional points such as repulsing from the center of the battlefield, the movement system determines the location with the lowest ``gravity'' and moves the robot to that location.
+
+The primary downside of this method is that the movement does not actively avoid getting shot, rather it attempts to change the situation to one where the robot will out-shoot the opponents. As such this downside is heavily reflected by the poor performance of this method in one-to-one combat, where a better gunning system or even a simple shot avoidance system will easily outperform a robot using anti-gravity movement.
+
+The downsides are offset by the many advantages it has over wave surfing in a melee environment, and by the fact that unless faced by extremely poor opposition in a melee battle, a far greater amount of time will be spent in a melee portion of the battle rather than the final one-to-one phase, if the robot even gets that far.
+
+\section{Reactive Anti-Gravity Movement} % todo: walls avoidance/corner avoidance (set forces at corners, walls)
+While wave surfing is definitely a preemptive movement system and anti-gravity is best performed in real-time, initial tests using interleaved movement and scanning revealed extremely poor performance both for movement and scanning, primarily due to the blocking nature of the \texttt{Robot} class.
+
+A considerable issue presented itself in acceleration and deceleration, which makes moving even relatively short distances take far too many ticks to warrant using interleaved movement to simulate a ``real-time'' system. While an \texttt{AdvanceRobot} can for example, if moving at the maximum speed, move 8 pixels in one ticks while still scanning, a \texttt{Robot} needs five ticks to move, while effectively being unable to properly scan.
+
+Considering these issues a reactive movement system was implemented, which uses the Anti-Gravity Pilot to determine a suitable location to move to when hit by a bullet. The reasoning behind this strategy is that a lot of robots do not tend to follow their target with their robot, but rather only track them with their weapon or fire at them when in range. By moving to a statistically safer location, the robot avoids being static while a gun is tracking it and/or it should reposition itself further away from sources that threaten it.
+
 
 \chapter{Implementation} % 500 words
 \section{Supporting Classes}
