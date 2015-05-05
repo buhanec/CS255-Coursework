@@ -154,15 +154,15 @@ public class Radar {
             //    target = t;
             //}
             if (state.getScanned(AGE_45) == 1) {
-                System.out.print("[Radar] 45: ");
+                //System.out.print("[Radar] 45: ");
                 for (String s : state.getScannedNames(AGE_45)) {
-                    System.out.print(s+" ");
+                    //System.out.print(s+" ");
                 }
-                System.out.println();
+                //System.out.println();
                 losttarget = false;
                 do45();
             } else {
-                System.out.println("[Radar] Regressing 45->360");
+                //System.out.println("[Radar] Regressing 45->360");
                 losttarget = true;
                 do360();
             }
@@ -170,13 +170,13 @@ public class Radar {
         } else if (isActive()) {
             //mode = MODE_RADAR;
             mode = MODE_GUN;
-            System.out.println("[Radar] Strategy: active ("+working+")");
+            //System.out.println("[Radar] Strategy: active ("+working+")");
             if (working == RADAR_360) {
                 if (state.getScanned(AGE_180) == state.getRemaining()) {
-                    System.out.println("[Radar] Found all, attempting 360->180");
+                    //System.out.println("[Radar] Found all, attempting 360->180");
                     do180();
                 } else if (previous == RADAR_360 && state.getScanned(AGE_180) >= NUM_180) {
-                    System.out.println("[Radar] Found enough, attempting 360->180");
+                    //System.out.println("[Radar] Found enough, attempting 360->180");
                     do180();
                 }
             } else if (working == RADAR_GUN) {
@@ -185,12 +185,12 @@ public class Radar {
         } else {
             //mode = MODE_RADAR;
             mode = MODE_GUN;
-            System.out.println("[Radar] Strategy: inactive");
+            //System.out.println("[Radar] Strategy: inactive");
             if (last360 < (robot.getTime() - AGE_360) && state.getScanned(AGE_180) < state.getRemaining()) {
-                System.out.println("[Radar] Time-based 360");
+                //System.out.println("[Radar] Time-based 360");
                 do360();
             } else {
-                System.out.println("[Radar] catch-all 180");
+                //System.out.println("[Radar] catch-all 180");
                 do180();
             }
         }
@@ -376,13 +376,13 @@ public class Radar {
     public void gunSimple(String name) {
         //System.out.println("[SIMPLEGUN]");
         Snapshot target = state.getSnapshot(name);
-        Snapshot self = state.getSelf();
+        Snapshot self = new Snapshot(robot);
 
         if (self == null) {
-            System.out.println("  [Gun] Self is null");
+            //System.out.println("  [Gun] Self is null");
         }
         if (target == self || target == null) {
-            System.out.println("  [Gun] Null target");
+            //System.out.println("  [Gun] Null target");
             return;
         }
         //System.out.println("  [Gun] Going for "+name);
@@ -400,10 +400,18 @@ public class Radar {
 
         VectorPoint projection = target.projectLinear(self.getTime()-target.getTime()+time);
         //System.out.println("  [Gun] Current target at "+target);
+        //System.out.println("  [Gun] Self at "+self);
         //System.out.println("  [Gun] Projected target at "+projection);
 
         double targetAngle = self.getNorthBearingTo(projection);
+        //double targetAngle = Math.toRadians(self.getHeading())+self.getBearingTo(projection);
+        //System.out.println(projection);
+        //System.out.println(Math.toDegrees(targetAngle));
+        //double targetAngle = Utility.fixAngle(projection.getHeading() - self.getHeading());
+
+
         //System.out.println("  [Gun] Gun projected at "+Math.round(Math.toDegrees(targetAngle)));
+        //System.out.println("  [Gun] Gun rotation left "+Math.round(Math.toDegrees(targetAngle-currentAngle)));
 
         if (working != RADAR_GUN) {
             setRadar(RADAR_GUN);
@@ -417,10 +425,11 @@ public class Radar {
             angle = Utility.fixAngle(currentAngle-targetAngle);
             direction = -1;
         }
+        //System.out.println("BBB: "+direction*angle);
 
         if (angle < Rules.GUN_TURN_RATE_RADIANS+0.0001) {
             double degrees = Math.min(Rules.GUN_TURN_RATE, Math.toDegrees(angle));
-            //System.out.println("1: "+degrees+" ");
+            //System.out.println("TTT: "+direction*degrees+" ");
             if (direction == 1) {
                 robot.turnGunRight(degrees);
             } else {
@@ -432,6 +441,7 @@ public class Radar {
             //TODO:FIX
             // crude check that can be improved on in the future
             //if (!arena.contains(projection)) {
+            //System.out.println("TARGETTED FIRING");
                 state.addBullet(robot.fireBullet(power), name);
             //}
         } else {

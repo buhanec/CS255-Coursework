@@ -192,7 +192,7 @@ public class State {
     }
 
     public Snapshot getSelf() {
-        return getSnapshot(self);
+        return new Snapshot(getSnapshot(self));
     }
 
     public double[] getArc() {

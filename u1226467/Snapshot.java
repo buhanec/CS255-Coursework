@@ -18,6 +18,13 @@ public class Snapshot extends VectorPoint {
         time = e.getTime();
     }
 
+    Snapshot(Snapshot snap) {
+        super(snap);
+        name = snap.getName();
+        energy = snap.getEnergy();
+        time = snap.getTime();
+    }
+
     Snapshot(String name, RobotStatus s) {
         super(s.getX(), s.getY(), s.getHeadingRadians(), s.getVelocity());
         this.name = name;
@@ -49,6 +56,6 @@ public class Snapshot extends VectorPoint {
     }
 
     public String toString() {
-        return name+" " +"("+Math.round(x)+","+Math.round(y)+") bearing "+Math.round(Math.toDegrees(heading))+" going "+Math.round(speed) + " at " + time;
+        return name+" " +"("+Math.round(x)+","+Math.round(y)+") heading "+Math.round(Math.toDegrees(heading))+" going "+Math.round(speed) + " at " + time;
     }
 }

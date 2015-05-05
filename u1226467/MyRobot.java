@@ -40,6 +40,8 @@ public class MyRobot extends Robot
 			surfer = new SurfPilot(this, state, arena);
 			hole = new WhiteHole(this, state, arena);
 			initialised = true;
+		} else {
+			state.reset();
 		}
 
 		// avoid turning gun when the robot turns
@@ -62,6 +64,7 @@ public class MyRobot extends Robot
 
 		while(true) {
 			if (getTime() >= previousTime + 1) {
+				System.out.println("--------");
 				previousTime = getTime();
 				previousEnergy = getEnergy();
 
@@ -76,6 +79,7 @@ public class MyRobot extends Robot
 						}
 					}
 				}
+				System.out.println("[Robot] state remaining: "+state.getRemaining());
 				if (radar.isFiring()) {
 					System.out.println("[Robot] check target");
 					// check if target is still good
@@ -213,12 +217,11 @@ public class MyRobot extends Robot
 	public void onBattleEnded(BattleEndedEvent e) {}
 
 	public void onRobotDeath(RobotDeathEvent e) {
+		System.out.println("[onRobotDeath] "+e.getName());
 		state.onRobotDeath(e);
 	}
 
-	public void onRoundEnded(RoundEndedEvent e) {
-		state.reset();
-	}
+	public void onRoundEnded(RoundEndedEvent e) {}
 
 	public void onWin(WinEvent e) {}
 }
