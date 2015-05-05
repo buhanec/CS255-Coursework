@@ -62,12 +62,9 @@ public class MyRobot extends Robot
 
 		while(true) {
 			if (getTime() >= previousTime + 1) {
-				//System.out.println("======== NEW TICK =======");
-				//System.out.println("Current time: "+getTime());
 				previousTime = getTime();
 				previousEnergy = getEnergy();
-				//System.out.println("------- Targeting -------");
-				// Radar decisions - scan or target
+
 				fireTurns++;
 				if (state.getRemaining() == 1 && !lastTarget) {
 					for (String t : state.getAlive()) {
@@ -80,11 +77,27 @@ public class MyRobot extends Robot
 					}
 				}
 				if (radar.isFiring()) {
+					System.out.println("[Robot] check target");
 					// check if target is still good
 				} else if (state.getRemaining() > 1) {
+					System.out.print("[Robot] target selection:");
+					System.out.print(" "+(state.getScanned() >= state.getRemaining()*FIRE_FACTOR));
+					System.out.print(" "+(radar.hasScanned() && fireTurns > FIRE_TIME));
+					System.out.println(" "+radar.shootAlready());
 					if ((state.getScanned() >= state.getRemaining()*FIRE_FACTOR)
-					    || (radar.hasScanned() && fireTurns > FIRE_TIME)) {
-						target = null;
+					    || (radar.hasScanned() && fireTurns > FIRE_TIME)
+					    || radar.shootAlready()) {
+						double rate = -1;
+						System.out.print("Potential targets: ");
+						for (String t : state.getScannedNames()) {
+							System.out.print(t+" ("+state.hitRate(t)+")");
+							double temp = state.hitRate(t);
+							if (temp > rate) {
+								target = t;
+								rate = temp;
+							}
+						}
+						System.out.println();
 						fireTurns = 0;
 					}
 				} else if (!lastTarget) {
@@ -96,8 +109,9 @@ public class MyRobot extends Robot
 				//System.out.println("--------- Radar ---------");
 				// Operations - should block here
 				//TODO only select target if energy is good enough
-				System.out.println(target);
-				System.out.println(getGunHeat());
+				System.out.print("Fire? ");
+				System.out.print(target+" ");
+				System.out.print(getGunHeat()+" ");
 				System.out.println(radar.lostTarget());
 				if (target != null && getGunHeat() == 0 && !radar.lostTarget()) {
 					System.out.println("Targeting");
@@ -131,7 +145,7 @@ public class MyRobot extends Robot
 		surfer.onScannedRobot(e);
 		// take potshot
 		if (getEnergy() > 10 && !radar.isFiring() && target == null) {
-			//System.out.println("[Potshot]");
+			System.out.println("[Potshot]");
 			if (getGunHeat() == 0) {
 				double power = 500/state.getSelf().distanceTo(snap);
 				// make it count, kinda

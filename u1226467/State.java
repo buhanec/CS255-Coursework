@@ -89,7 +89,7 @@ public class State {
     }
 
     public int getScanned() {
-        return getScanned(2);
+        return getScanned(3);
     }
 
     public int getScanned(int age) {
@@ -104,6 +104,10 @@ public class State {
             }
         }
         return retval;
+    }
+
+    public Set<String> getScannedNames() {
+        return getScannedNames(3);
     }
 
     public Set<String> getScannedNames(int age) {
@@ -301,6 +305,15 @@ public class State {
             rate = 0;
         }
         return value * (1 - rate * 0.75) + 0.5;
+    }
+
+    public double hitRate(String target) {
+        double num = hit.get(target);
+        double rate = num / num + missed.get(target);
+        if (Double.isNaN(rate)) {
+            return 0;
+        }
+        return rate;
     }
 
     public String toString() {

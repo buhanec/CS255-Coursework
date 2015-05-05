@@ -240,11 +240,11 @@ public class Radar {
         //System.out.println("[Radar] doOscillate");
         setRadar(type);
         names = state.getScannedNames(age);
-        System.out.print("Looking for: ");
+        //System.out.print("Looking for: ");
         for (String name : names) {
-            System.out.print(name);
+            //System.out.print(name);
         }
-        System.out.println();
+        //System.out.println();
 
         double angles[] = state.getArc();
         //System.out.println("  [Radar] Raw angles: "+Math.round(Math.toDegrees(angles[0]))+"-"+Math.round(Math.toDegrees(angles[1])));
@@ -255,9 +255,9 @@ public class Radar {
             angles[0] = Utility.fixAngle(angles[0] - getGunHeadingRadians());
             angles[1] = Utility.fixAngle(angles[1] - getGunHeadingRadians());
         }
-        System.out.println("  [Radar] Adjusted angles: "+Math.round(Math.toDegrees(angles[0]))+"-"+Math.round(Math.toDegrees(angles[1])));
+        //System.out.println("  [Radar] Adjusted angles: "+Math.round(Math.toDegrees(angles[0]))+"-"+Math.round(Math.toDegrees(angles[1])));
 
-        System.out.println("  [Radar] Arc size: "+Math.toDegrees(Utility.angleBetween(angles[0], angles[1])));
+        //System.out.println("  [Radar] Arc size: "+Math.toDegrees(Utility.angleBetween(angles[0], angles[1])));
 
         if (Utility.angleBetween(angles[0], angles[1]) > (Math.PI)) {
             //System.out.println("[Radar] Unsuitable, regressing to 360");
@@ -365,6 +365,10 @@ public class Radar {
         }
     }
 
+    public boolean shootAlready() {
+        return (mode == RADAR_180 && previous == RADAR_180);
+    }
+
     public boolean isFiring() {
         return firing;
     }
@@ -398,11 +402,6 @@ public class Radar {
         //System.out.println("  [Gun] Current target at "+target);
         //System.out.println("  [Gun] Projected target at "+projection);
 
-        if (!arena.contains(projection)) {
-            setStrategy();
-            scan();
-        }
-
         double targetAngle = self.getNorthBearingTo(projection);
         //System.out.println("  [Gun] Gun projected at "+Math.round(Math.toDegrees(targetAngle)));
 
@@ -430,7 +429,11 @@ public class Radar {
             setRadar(RADAR_0);
             justfired = true;
             firing = false;
-            state.addBullet(robot.fireBullet(power), name);
+            //TODO:FIX
+            // crude check that can be improved on in the future
+            //if (!arena.contains(projection)) {
+                state.addBullet(robot.fireBullet(power), name);
+            //}
         } else {
             angle = angle - Rules.GUN_TURN_RATE_RADIANS;
             if (direction == 1) {
