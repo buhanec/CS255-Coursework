@@ -35,7 +35,9 @@ public class SurfPilot implements Pilot {
         this.state = state;
         this.target = null;
         this.arena = arena;
-        wallSmoothingFactor = Math.min(Math.min(arena.getWidth(), arena.getHeight())*WALL_STICK_PERCENT, WALL_STICK);
+        wallSmoothingFactor = Math.min(Math.min(arena.getWidth(),
+                                       arena.getHeight())*WALL_STICK_PERCENT,
+                                       WALL_STICK);
 
         minWaves = new ArrayList<Wave>();
         waves = new ArrayList<Wave>();
@@ -48,7 +50,7 @@ public class SurfPilot implements Pilot {
         this.target = target;
     }
 
-    // courtesy of wiki tutorial
+    // inspired by Robowiki surfing tutorial
     public void onScannedRobot(ScannedRobotEvent e) {
         // check if we scanned the right robot
         Snapshot current;
@@ -68,8 +70,9 @@ public class SurfPilot implements Pilot {
         // calculate bullet information
         if (previous != null) {
             double bulletEnergy = previous.getEnergy()-current.getEnergy();
-            if (Utility.containedii(bulletEnergy, Rules.MIN_BULLET_POWER-0.0001, Rules.MAX_BULLET_POWER+0.0001) && directions.size() > 2) {
-                //System.out.println("[Surfer] Wave detected");
+            if (Utility.containedii(bulletEnergy,
+                Rules.MIN_BULLET_POWER-0.0001,
+                Rules.MAX_BULLET_POWER+0.0001) && directions.size() > 2) {
                 long bulletTime, bulletMinTime, bulletMaxTime;
                 Wave min, avg, max;
                 if (current.getTime()-previous.getTime() > 1) {
@@ -113,6 +116,7 @@ public class SurfPilot implements Pilot {
         }
     }
 
+    // try to determine responsible waves for a hit
     public int responsibleWave(HitByBulletEvent e, List<Wave> waves) {
         if (!waves.isEmpty()) {
             Point location = new Point(e.getBullet().getX(), e.getBullet().getY());
@@ -126,6 +130,7 @@ public class SurfPilot implements Pilot {
         return -1;
     }
 
+    // log the wave hitting for statistics
     public void log(Wave wave, Point collision) {
         int index = getFactorIndex(wave, collision);
         for (int i = 0; i < BINS; i++) {
@@ -133,6 +138,7 @@ public class SurfPilot implements Pilot {
         }
     }
 
+    // try to find the responsible wave and log the collision for statistics
     public void onHitByBullet(HitByBulletEvent e) {
         int id = responsibleWave(e, waves);
         Wave wave = null;
@@ -157,6 +163,7 @@ public class SurfPilot implements Pilot {
         }
     }
 
+    // update the storage of waves
     public void update(long time) {
         for (Iterator<Wave> i = waves.iterator(); i.hasNext();) {
             Wave wave = i.next();
@@ -167,6 +174,7 @@ public class SurfPilot implements Pilot {
         }
     }
 
+    // returns the closest wave
     public Wave getWave() {
         double closest = Double.POSITIVE_INFINITY;
         Wave retval = null;
@@ -197,7 +205,7 @@ public class SurfPilot implements Pilot {
         return Math.asin(Rules.MAX_VELOCITY/speed);
     }
 
-    // Based on Apollon by rozue (http://robowiki.net?Apollon)
+    // based on Apollon by rozue (robowiki.net?Apollon)
     public Point predict(Wave wave, int direction) {
         VectorPoint self = new VectorPoint(state.getSelf());
         long time = 500; // how many ticks to simulate
@@ -241,24 +249,27 @@ public class SurfPilot implements Pilot {
         return self;
     }
 
+    // determine the danger based on statistics in a given direction
     public double danger(Wave wave, int direction) {
         int index = getFactorIndex(wave, predict(wave, direction));
         return stats[index];
     }
 
+    // perform surfing
     public void move() {
         surf();
     }
 
+    // perform surfing
     public void surf() {
-        //System.out.println("[Surfer] surfing");
         Wave wave = getWave();
         DirectedPoint self = state.getSelf();
-        //System.out.println(state);
         int dir = (random.nextBoolean() ? -1 : 1);
         double heading = self.getHeading();
         double angle = wallSmoothing(self, heading, dir);
         double emergency = 0;
+
+        // get wave and determine moving angle
         if (wave != null) {
             angle = wave.getNorthBearingTo(self);
             if (danger(wave, -1) < danger(wave, 1)) {
@@ -269,16 +280,15 @@ public class SurfPilot implements Pilot {
                 angle = wallSmoothing(self, angle, 1);
             }
             emergency = self.distanceTo(wave)/wave.getSpeed();
-            //System.out.println("[Surf] Emergency: "+emergency);
-            //System.out.println("[Surf] Angle: "+Math.toDegrees(angle));
         }
 
+        // attempt to conserve ticks by not moving until a wave has approached enough
         if (emergency > WAVE_MOVE_THRESHOLD) {
-            //System.out.println(emergency);
             simple(angle);
         }
     }
 
+    // performs movement based on the recommended movement pattern on the Robowiki
     public void simple(double angle) {
         angle = Utility.fixAngle(angle - state.getSelf().getHeading());
         if (Utility.isAngleBetween(angle, 0, Math.PI/2)) {
@@ -296,7 +306,7 @@ public class SurfPilot implements Pilot {
         }
     }
 
-    // Simple iterative wall smoothing
+    // simple iterative wall smoothing
     protected double wallSmoothing(Point self, double angle, int direction) {
         while (!arena.contains(Utility.vectorAdd(self, angle, wallSmoothingFactor))) {
             angle += direction*SMOOTHING_STEP;

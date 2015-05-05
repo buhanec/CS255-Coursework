@@ -51,22 +51,38 @@ public class State {
         }
     }
 
+    /**
+     * Confirms whether a robot is alive-
+     */
     public boolean isAlive(String name) {
         return alive.contains(name);
     }
 
+    /**
+     * Confirmed whether a robot is dead.
+     */
     public boolean isDead(String name) {
         return dead.contains(name);
     }
 
+    /**
+     * Returns the set of confirmed alive targets.
+     */
     public Set<String> getAlive() {
         return Collections.unmodifiableSet(alive);
     }
 
+    /**
+     * Returns the set of confirmed dead targets.
+     */
     public Set<String> getDead() {
         return Collections.unmodifiableSet(dead);
     }
 
+    /**
+     * Updates the storage's clock and sorts the threats in a sorted map for
+     * any future expansion of the state's functionality.
+     */
     public void update(long time) {
         this.time = time;
         sorted.clear();
@@ -80,18 +96,30 @@ public class State {
         }
     }
 
+    /**
+     * Returns the remaining number of targets.
+     */
     public int getRemaining() {
         return remaining-1;
     }
 
+    /**
+     * Returns the total number of targets.
+     */
     public int getTotal() {
-        return total;
+        return total-1;
     }
 
+    /**
+     * Returns the number of recently scanned targets.
+     */
     public int getScanned() {
         return getScanned(3);
     }
 
+    /**
+     * Returns the number of recently scanned targets.
+     */
     public int getScanned(int age) {
         int retval = 0;
         for (List<Snapshot> list : history.values()) {
@@ -106,10 +134,16 @@ public class State {
         return retval;
     }
 
+    /**
+     * Returns a set of the names of recently scanned targets.
+     */
     public Set<String> getScannedNames() {
         return getScannedNames(3);
     }
 
+    /**
+     * Returns a set of the names of recently scanned targets.
+     */
     public Set<String> getScannedNames(int age) {
         Set<String> retval = new HashSet<String>();
         for (List<Snapshot> list : history.values()) {
@@ -124,10 +158,16 @@ public class State {
         return retval;
     }
 
+    /**
+     * Returns a set of the newest snapshots.
+     */
     public Set<Snapshot> getLatestSnapshots() {
         return getLatestSnapshots(18);
     }
 
+    /**
+     * Returns a set of the newest snapshots, with a maximum age specified.
+     */
     public Set<Snapshot> getLatestSnapshots(int age) {
         Set<Snapshot> retval = new HashSet<Snapshot>();
         for (List<Snapshot> list : history.values()) {
@@ -142,6 +182,9 @@ public class State {
         return retval;
     }
 
+    /**
+     * Adds a snapshot to the storage.
+     */
     public void addSnapshot(Snapshot snapshot) {
         String name = snapshot.getName();
         alive.add(name);
@@ -165,6 +208,9 @@ public class State {
         }
     }
 
+    /**
+     * Returns the newest snapshot of the target.
+     */
     public Snapshot getSnapshot(String name) {
         if (history.containsKey(name)) {
             List<Snapshot> list = history.get(name);
@@ -178,6 +224,9 @@ public class State {
         }
     }
 
+    /**
+     * Returns the second newest snapshot of the target.
+     */
     public Snapshot getPreviousSnapshot(String name) {
         if (history.containsKey(name)) {
             List<Snapshot> list = history.get(name);
@@ -191,20 +240,41 @@ public class State {
         }
     }
 
+    /**
+     * Returns the robot as a snapshot.
+     */
     public Snapshot getSelf() {
         return new Snapshot(getSnapshot(self));
     }
 
+    /**
+     * Calculates the smallest arc that contains all the projected enemies in
+     * two ticks of time. Performs the most extreme lateral projections of the
+     * targets movements and is sufficient for oscillation scanning, even with
+     * almost no padding and gun scanning.
+     */
     public double[] getArc() {
         return getArc(0, 18);
     }
 
+    /**
+     * Calculates the smallest arc that contains all the projected enemies in
+     * two ticks of time. Performs the most extreme lateral projections of the
+     * targets movements and is sufficient for oscillation scanning, even with
+     * almost no padding and gun scanning.
+     */
     public double[] getArc(double heading, long age) {
         DirectedPoint point = new DirectedPoint(getSelf());
         point.setHeading(heading);
         return getArc(point, age);
     }
 
+    /**
+     * Calculates the smallest arc that contains all the projected enemies in
+     * two ticks of time. Performs the most extreme lateral projections of the
+     * targets movements and is sufficient for oscillation scanning, even with
+     * almost no padding and gun scanning.
+     */
     public double[] getArc(DirectedPoint radar, long age) {
         long time = 2;
         VectorPoint origin = getSelf();
@@ -215,31 +285,45 @@ public class State {
         double right;
         double[] retval = {Double.NaN, Double.NaN};
 
+        // Iterate through all the known targets
         for (List<Snapshot> list : history.values()) {
             if (list.size() > 0) {
+                // If the target is not ourselves and is recent enough, get
+                // angles to its worst case projections.
                 enemy = list.get(0);
-                if (enemy.getTime() >= time-age && !enemy.getName().equals(self)) {
-                    left = radar.getBearingTo(enemy.projectLateral(origin, -1, time));
-                    right = radar.getBearingTo(enemy.projectLateral(origin, 1, time));
+                if (enemy.getTime() >= time-age
+                    && !enemy.getName().equals(self)) {
+                    left = radar.getBearingTo(enemy.projectLateral(origin,
+                                                                   -1, time));
+                    right = radar.getBearingTo(enemy.projectLateral(origin,
+                                                                    1, time));
                 } else {
                     continue;
                 }
-                if (Utility.angleBetween(left, right) > Utility.angleBetween(right, left)) {
+                // Flip the angles if the projection direction was switched
+                if (Utility.angleBetween(left, right)
+                    > Utility.angleBetween(right, left)) {
                     temp = left;
                     left = right;
                     right = temp;
                 }
+                // If this is the first target being scanned assign its
+                // projections are the boundaries of the arc
                 if (Double.isNaN(retval[0])) {
                     retval[0] = left;
                     retval[1] = right;
+                // Determine the least expensive way of adding the target to
+                // the arc.
                 } else {
                     if (Utility.isAngleBetween(left, retval[0], retval[1])) {
-                        if (Utility.isAngleBetween(right, retval[0], retval[1])) {
+                        if (Utility.isAngleBetween(right, retval[0],
+                                                   retval[1])) {
                             continue;
                         } else {
                             retval[1] = right;
                         }
-                    } else if (Utility.isAngleBetween(right, retval[0], retval[1])) {
+                    } else if (Utility.isAngleBetween(right, retval[0],
+                                                      retval[1])) {
                         retval[0] = left;
                     } else if (Utility.angleBetween(retval[1], left) <
                                Utility.angleBetween(right, retval[0])) {
@@ -253,6 +337,9 @@ public class State {
         return retval;
     }
 
+    /**
+     * Registers robot death.
+     */
     public void onRobotDeath(RobotDeathEvent e) {
         String name = e.getName();
         if (alive.contains(name)) {
@@ -265,6 +352,9 @@ public class State {
         remaining--;
     }
 
+    /**
+     * Registers hitting a target.
+     */
     public void hit(Bullet bullet) {
         String target = bullets.get(bullet);
         double damage = Rules.getBulletDamage(bullet.getPower());
@@ -273,6 +363,9 @@ public class State {
         }
     }
 
+    /**
+     * Registers missing a target.
+     */
     public void miss(Bullet bullet) {
         String target = bullets.get(bullet);
         double damage = Rules.getBulletDamage(bullet.getPower());
@@ -281,19 +374,27 @@ public class State {
         }
     }
 
+    /**
+     * Registers being hit by target.
+     */
     public void hitBy(Bullet bullet, String target) {
         double damage = Rules.getBulletDamage(bullet.getPower());
         threat.put(target, threat.get(target) + damage);
         totalThreat = totalThreat + damage;
     }
 
+    /**
+     * Adds a bullet to the storage.
+     */
     public void addBullet(Bullet bullet, String target) {
         if (bullet != null) {
             bullets.put(bullet, target);
         }
     }
 
-    // range from 0.5 - 4.5, usually under 2 for larger battles
+    /**
+     * Returns a threat rating of a target.
+     */
     public double threat(String target) {
         double value = Math.log(threat.get(target)/(2*totalThreat)+1);
         if (Double.isNaN(value)) {
@@ -307,6 +408,9 @@ public class State {
         return value * (1 - rate * 0.75) + 0.5;
     }
 
+    /**
+     * Returns the weighted hit rate of the robot on a target.
+     */
     public double hitRate(String target) {
         double num = hit.get(target);
         double rate = num / num + missed.get(target);

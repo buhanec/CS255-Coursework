@@ -6,12 +6,6 @@ import java.awt.geom.*;
 
 public class MyRobot extends Robot
 {
-	private static int    BINS        = 47;
-	private static double INFINITY    = Double.POSITIVE_INFINITY;
-	private static double PI          = Math.PI;
-	private static double PADDING     = 0.1;
-	private static double MIN_PADDING = 100;
-	private static double DIRECTION   = 0.1;
 	private static double RAM_LIMIT   = 0.9;
 	private static double FIRE_FACTOR = 0.5;
 	private static long   FIRE_TIME   = 18;
@@ -31,8 +25,8 @@ public class MyRobot extends Robot
 	public void run() {
 		// initialise static variables
 		if (!initialised) {
-			System.out.println("[Robot] Initialised");
-			double diagonal = Math.ceil(Math.sqrt(Math.pow(getWidth(), 2) + Math.pow(getHeight(), 2)));
+			double diagonal = Math.ceil(Math.sqrt(Math.pow(getWidth(), 2)
+			                            + Math.pow(getHeight(), 2)));
 			state = new State(getName(), getOthers() + 1);
 			arena = new Rectangle(diagonal, diagonal,
 			                      getBattleFieldWidth()-2*diagonal,
@@ -47,7 +41,9 @@ public class MyRobot extends Robot
 		// avoid turning gun when the robot turns
 		setAdjustGunForRobotTurn(true);
 
-		// state
+		// energy and time state, currently not used but would be used if
+		// the robot started losing ticks due to computationally demanding
+		// tasks or long blocking functions.
 		long previousTime = -1;
 		double previousEnergy = getEnergy();
 
@@ -57,18 +53,20 @@ public class MyRobot extends Robot
 
 		// radar
 		radar = new Radar(this, state, arena);
-		boolean lastTarget = false;
+		boolean lastTarget = false; // is the last target set
 		boolean shouldFire = false;
-		long fireTurns = 0;
+		long fireTurns = 0; // turns since not opting to firing
 		target = null;
 
 		while(true) {
 			if (getTime() >= previousTime + 1) {
-				System.out.println("--------");
 				previousTime = getTime();
 				previousEnergy = getEnergy();
 
 				fireTurns++;
+
+				// if there is only one target and we have not set it as the
+				// target yet, do so now
 				if (state.getRemaining() == 1 && !lastTarget) {
 					for (String t : state.getAlive()) {
 						if (!t.equals(getName())) {
@@ -79,50 +77,49 @@ public class MyRobot extends Robot
 						}
 					}
 				}
-				System.out.println("[Robot] state remaining: "+state.getRemaining());
-				if (radar.isFiring()) {
-					System.out.println("[Robot] check target");
-					// check if target is still good
-				} else if (state.getRemaining() > 1) {
-					System.out.print("[Robot] target selection:");
-					System.out.print(" "+(state.getScanned() >= state.getRemaining()*FIRE_FACTOR));
-					System.out.print(" "+(radar.hasScanned() && fireTurns > FIRE_TIME));
-					System.out.println(" "+radar.shootAlready());
-					if ((state.getScanned() >= state.getRemaining()*FIRE_FACTOR)
+
+				// if we are not currently firing and there is more than one
+				// target remaining
+				if (!radar.isFiring() && state.getRemaining() > 1) {
+					// the three conditions under which we choose a new target
+					// are:
+					//  - we have enough targets scanned
+					//  - we have previously completed a full scan and the
+					//    robot has not fired in a while
+					//  - the radar is telling the robot to shoot already
+					if ((state.getScanned()>=state.getRemaining()*FIRE_FACTOR)
 					    || (radar.hasScanned() && fireTurns > FIRE_TIME)
 					    || radar.shootAlready()) {
+						// choose the target that is easiest to hit
 						double rate = -1;
-						System.out.print("Potential targets: ");
 						for (String t : state.getScannedNames()) {
-							System.out.print(t+" ("+state.hitRate(t)+")");
 							double temp = state.hitRate(t);
 							if (temp > rate) {
 								target = t;
 								rate = temp;
 							}
 						}
-						System.out.println();
 						fireTurns = 0;
 					}
+				// if the currently selected target is not the last target and
+				// we are not currently firing at it, clear it to allow for
+				// scanning to occur
 				} else if (!lastTarget) {
 					target = null;
 				}
+
 				// Movement updates
 				surfer.update(getTime());
 				hole.update(getTime());
-				//System.out.println("--------- Radar ---------");
-				// Operations - should block here
-				//TODO only select target if energy is good enough
-				System.out.print("Fire? ");
-				System.out.print(target+" ");
-				System.out.print(getGunHeat()+" ");
-				System.out.println(radar.lostTarget());
-				if (target != null && getGunHeat() == 0 && !radar.lostTarget()) {
-					System.out.println("Targeting");
+
+				// if there is a target chosen and we can fire, and the target
+				// was not reported lost by the radar, we attempt to fire
+				if (target != null && getGunHeat() == 0
+				    && !radar.lostTarget()) {
 					state.update(getTime()+1);
 					radar.gunSimple(target);
+				// otherwise we perform scanning
 				} else {
-					System.out.println("Scanning");
 					radar.setStrategy();
 					state.update(getTime()+1);
 					radar.scan();
@@ -134,7 +131,6 @@ public class MyRobot extends Robot
 	}
 
 	public void onStatus(StatusEvent e)  {
-		//System.out.println("[onstatus]");
 		if (state != null) {
 			Snapshot snap = new Snapshot(getName(), e.getStatus());
 			state.addSnapshot(snap);
@@ -143,25 +139,26 @@ public class MyRobot extends Robot
 
 	public void onScannedRobot(ScannedRobotEvent e) {
 		Snapshot snap = new Snapshot(e, this);
-		//System.out.println(snap);
+		// update state, radar and surfer
 		state.addSnapshot(snap);
 		radar.onScannedRobot(e);
 		surfer.onScannedRobot(e);
-		// take potshot
+		// take potshot if possible, as it does not waste ticks and many
+		// robots are stationary
 		if (getEnergy() > 10 && !radar.isFiring() && target == null) {
-			System.out.println("[Potshot]");
 			if (getGunHeat() == 0) {
 				double power = 500/state.getSelf().distanceTo(snap);
-				// make it count, kinda
 				if (getEnergy() > 20 && power < 0.5) {
 					power = 0.5;
 				}
-				power = Utility.constrain(power, Rules.MIN_BULLET_POWER, Rules.MAX_BULLET_POWER);
+				power = Utility.constrain(power, Rules.MIN_BULLET_POWER,
+				                          Rules.MAX_BULLET_POWER);
 				state.addBullet(fireBullet(power), e.getName());
 			}
 		}
 	}
 
+	// update state and pilots, perform reactive movement
 	public void onHitByBullet(HitByBulletEvent e) {
 		surfer.onHitByBullet(e);
 		hole.onHitByBullet(e);
@@ -171,11 +168,11 @@ public class MyRobot extends Robot
 
 	// Should not happen under normal circumstances
 	public void onHitWall(HitWallEvent e) {
-		System.out.println("[onHitWall]");
 		hole.reactive(true);
 	}
 
-	public void onHitRobot2(HitRobotEvent e) {
+	// if we rammed someone, keep ramming
+	public void onHitRobot(HitRobotEvent e) {
 		DirectedPoint self = state.getSelf();
 		double limx, limy, distance;
 
@@ -197,31 +194,30 @@ public class MyRobot extends Robot
 
 		distance = Math.min(limx, limy)*RAM_LIMIT;
 
-		ahead(distance);
+		if (getVelocity() > 0) {
+			ahead(distance);
+		} else {
+			back(distance);
+		}
 	}
 
+	// update state
 	public void onBulletHit(BulletHitEvent e) {
 		state.hit(e.getBullet());
 	}
 
+	// update state
 	public void onBulletHitBullet(BulletHitBulletEvent e) {
 		state.miss(e.getBullet());
 	}
 
+	// update state
 	public void onBulletMissed(BulletMissedEvent e) {
 		state.miss(e.getBullet());
 	}
 
-	public void onDeath(DeathEvent e) {}
-
-	public void onBattleEnded(BattleEndedEvent e) {}
-
+	// update state
 	public void onRobotDeath(RobotDeathEvent e) {
-		System.out.println("[onRobotDeath] "+e.getName());
 		state.onRobotDeath(e);
 	}
-
-	public void onRoundEnded(RoundEndedEvent e) {}
-
-	public void onWin(WinEvent e) {}
 }
